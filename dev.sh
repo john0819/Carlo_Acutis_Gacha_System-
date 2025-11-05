@@ -21,29 +21,27 @@ if [ ! -f "go.sum" ]; then
     go mod tidy
 fi
 
-# 停止旧进程
-if lsof -Pi :8080 -sTCP:LISTEN -t >/dev/null 2>&1; then
-    echo "🛑 停止旧服务器..."
-    pkill -f "main.go"
-    sleep 1
-    # 如果还在运行，通过端口强制停止
-    PID=$(lsof -ti :8080 2>/dev/null)
+# 停止旧进程（仅停止8081端口的开发服务器）
+if lsof -Pi :8081 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    echo "🛑 停止旧开发服务器..."
+    PID=$(lsof -ti :8081 2>/dev/null)
     if [ -n "$PID" ]; then
         kill $PID 2>/dev/null
         sleep 1
-        if lsof -Pi :8080 -sTCP:LISTEN -t >/dev/null 2>&1; then
+        if lsof -Pi :8081 -sTCP:LISTEN -t >/dev/null 2>&1; then
             kill -9 $PID 2>/dev/null
         fi
     fi
     sleep 1
 fi
 
-echo "🚀 启动服务器（前台运行，显示实时日志）..."
+echo "🚀 启动开发服务器（端口8081，前台运行，显示实时日志）..."
 echo "📝 按 Ctrl+C 停止服务器"
+echo "🌐 开发地址: http://localhost:8081"
 echo ""
 echo "═══════════════════════════════════════════════════"
 echo ""
 
-# 前台运行，显示实时日志
-go run main.go
+# 设置环境变量指定端口，前台运行，显示实时日志
+PORT=8081 go run main.go
 

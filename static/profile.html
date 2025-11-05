@@ -149,6 +149,10 @@
         .nav {
             text-align: center;
             margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
         }
 
         .nav a {
@@ -158,7 +162,20 @@
             background: rgba(255, 255, 255, 0.2);
             border-radius: 8px;
             display: inline-block;
-            margin: 0 10px;
+            white-space: nowrap;
+        }
+
+        /* 移动端响应式 */
+        @media (max-width: 480px) {
+            .nav {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .nav a {
+                width: 80%;
+                margin: 5px 0;
+            }
         }
     </style>
 </head>
@@ -206,6 +223,7 @@
 
         <div class="nav">
             <a href="/index.html">返回主页</a>
+            <a href="/collection.html">我的卡包</a>
             <a href="#" onclick="logout()">退出登录</a>
         </div>
     </div>

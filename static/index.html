@@ -87,10 +87,44 @@
             margin-left: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s;
+            display: inline-block;
         }
 
         .nav-btn:hover {
             transform: translateY(-2px);
+        }
+
+        /* 移动端响应式 */
+        @media (max-width: 768px) {
+            .nav {
+                top: 10px;
+                right: 10px;
+            }
+
+            .nav-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+                margin-left: 5px;
+                margin-bottom: 5px;
+            }
+
+            /* 如果屏幕更小，让按钮换行 */
+            @media (max-width: 480px) {
+                .nav {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                    max-width: calc(100% - 20px);
+                }
+
+                .nav-btn {
+                    margin-left: 0;
+                    margin-bottom: 8px;
+                    width: auto;
+                    text-align: center;
+                    min-width: 80px;
+                }
+            }
         }
 
         .draw-btn {
@@ -210,11 +244,79 @@
         .close-btn:hover {
             background: #5568d3;
         }
+
+        /* 成就通知弹窗 */
+        .achievement-notification {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .achievement-notification.show {
+            display: flex;
+        }
+
+        .achievement-content-notif {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            animation: achievementAppear 0.5s ease-out;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes achievementAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.8) rotateY(180deg);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) rotateY(0deg);
+            }
+        }
+
+        .achievement-icon-large {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+
+        .achievement-title-notif {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .achievement-desc-notif {
+            font-size: 16px;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .achievement-reward-notif {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="nav">
+        <a href="/collection.html" class="nav-btn">我的卡包</a>
+        <a href="/achievements.html" class="nav-btn">成就</a>
         <a href="/profile.html" class="nav-btn">个人资料</a>
+        <a href="#" onclick="showFeedbackModal()" class="nav-btn">反馈</a>
         <a href="#" onclick="logout()" class="nav-btn">退出</a>
     </div>
     <div class="container">
@@ -232,6 +334,40 @@
             <img id="cardImage" src="" alt="卡片">
             <div class="card-message" id="cardMessage">恭喜你抽到了卡片！</div>
             <button class="close-btn" onclick="closeCardModal()">确定</button>
+        </div>
+    </div>
+
+    <!-- 成就通知弹窗 -->
+    <div class="achievement-notification" id="achievementNotification">
+        <div class="achievement-content-notif">
+            <div class="achievement-icon-large">🏆</div>
+            <div class="achievement-title-notif" id="achievementTitle">解锁成就！</div>
+            <div class="achievement-desc-notif" id="achievementDesc">成就描述</div>
+            <div class="achievement-reward-notif" id="achievementReward">奖励: 1 兑换点</div>
+            <button class="close-btn" onclick="closeAchievementNotification()" style="background: rgba(255,255,255,0.2); color: white;">确定</button>
+        </div>
+    </div>
+
+    <!-- 反馈弹窗 -->
+    <div class="card-modal" id="feedbackModal">
+        <div class="card-content" style="max-width: 500px;">
+            <h2 style="margin-bottom: 20px; color: #333;">📝 提交反馈</h2>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: #666; font-size: 14px;">反馈类型</label>
+                <select id="feedbackType" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                    <option value="bug">Bug反馈</option>
+                    <option value="suggestion">建议</option>
+                    <option value="other">其他</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: #666; font-size: 14px;">反馈内容</label>
+                <textarea id="feedbackContent" placeholder="请描述您遇到的问题或建议..." style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; min-height: 120px; resize: vertical; font-family: inherit;"></textarea>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="submitFeedback()" style="flex: 1;">提交</button>
+                <button class="btn btn-secondary" onclick="closeFeedbackModal()" style="flex: 1;">取消</button>
+            </div>
         </div>
     </div>
 
@@ -373,6 +509,12 @@
                     showCardResult(data);
                     // 更新显示的图片
                     displayCard(data.card);
+                    // 检查是否有新成就
+                    if (data.new_achievements && data.new_achievements.length > 0) {
+                        setTimeout(() => {
+                            showAchievementNotification(data.new_achievements);
+                        }, 1500);
+                    }
                 } else {
                     alert(data.error || '抽卡失败');
                     drawBtn.disabled = false;
@@ -457,6 +599,80 @@
                 console.error('检查抽卡状态失败:', error);
             }
         }
+
+        // 显示成就通知
+        function showAchievementNotification(achievements) {
+            if (!achievements || achievements.length === 0) return;
+            
+            const firstAchievement = achievements[0];
+            const notification = document.getElementById('achievementNotification');
+            document.getElementById('achievementTitle').textContent = firstAchievement.achievement_type.name;
+            document.getElementById('achievementDesc').textContent = firstAchievement.achievement_type.description;
+            document.getElementById('achievementReward').textContent = 
+                `奖励: ${firstAchievement.achievement_type.reward_points} 兑换点`;
+            
+            notification.classList.add('show');
+        }
+
+        // 关闭成就通知
+        function closeAchievementNotification() {
+            document.getElementById('achievementNotification').classList.remove('show');
+        }
+
+        // 显示反馈弹窗
+        function showFeedbackModal() {
+            document.getElementById('feedbackModal').classList.add('show');
+            document.getElementById('feedbackContent').value = '';
+            document.getElementById('feedbackType').value = 'bug';
+        }
+
+        // 关闭反馈弹窗
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').classList.remove('show');
+        }
+
+        // 提交反馈
+        async function submitFeedback() {
+            const content = document.getElementById('feedbackContent').value.trim();
+            const type = document.getElementById('feedbackType').value;
+
+            if (!content) {
+                alert('请输入反馈内容');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                        type: type
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(data.message || '反馈提交成功！');
+                    closeFeedbackModal();
+                } else {
+                    alert(data.error || '提交失败，请稍后重试');
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+            }
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('feedbackModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeFeedbackModal();
+            }
+        });
 
         // 页面加载时自动检查今天是否已抽卡
         window.addEventListener('load', function() {

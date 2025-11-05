@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"h5project/auth"
 	"h5project/database"
@@ -30,6 +31,14 @@ func main() {
 	http.HandleFunc("/api/user/profile/update", auth.JWTMiddleware(handlers.UpdateProfile))
 	http.HandleFunc("/api/draw/check", auth.JWTMiddleware(handlers.CheckTodayDraw))
 	http.HandleFunc("/api/draw", auth.JWTMiddleware(handlers.DrawCard))
+	http.HandleFunc("/api/user/cards", auth.JWTMiddleware(handlers.GetUserCards))
+	http.HandleFunc("/api/card/", auth.JWTMiddleware(handlers.HandleCardRequest))
+	http.HandleFunc("/api/achievements", auth.JWTMiddleware(handlers.GetAchievements))
+	http.HandleFunc("/api/claim-reward", auth.JWTMiddleware(handlers.ClaimReward))
+	http.HandleFunc("/api/redeem", auth.JWTMiddleware(handlers.Redeem))
+	http.HandleFunc("/api/redemption-info", auth.JWTMiddleware(handlers.GetRedemptionInfo))
+	http.HandleFunc("/api/feedback", auth.JWTMiddleware(handlers.SubmitFeedback))
+	http.HandleFunc("/api/feedbacks", auth.JWTMiddleware(handlers.GetFeedbacks))
 
 	// 图片目录
 	imageFs := http.FileServer(http.Dir("./images"))
@@ -39,7 +48,12 @@ func main() {
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
 
-	port := ":8080"
+	// 从环境变量获取端口，默认8080
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	port = ":" + port
 	log.Printf("🚀 服务器启动在 http://localhost%s", port)
 	log.Printf("📱 H5页面地址: http://localhost%s/login.html", port)
 

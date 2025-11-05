@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>成就系统 - 抽卡WebApp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px;
+            padding-top: 100px;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .header .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .nav-btn:hover {
+            background: #5568d3;
+        }
+
+        /* 移动端响应式 */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+
+            .header h1 {
+                font-size: 18px;
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .header .nav-buttons {
+                gap: 5px;
+            }
+
+            .nav-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px;
+            }
+
+            .header h1 {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .header .nav-buttons {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .nav-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .stat-item {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .achievement-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .achievement-item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .achievement-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            flex-shrink: 0;
+        }
+
+        .achievement-icon.locked {
+            background: #e0e0e0;
+            color: #999;
+        }
+
+        .achievement-icon.unlocked {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .achievement-icon.claimed {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .achievement-content {
+            flex: 1;
+        }
+
+        .achievement-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .achievement-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .achievement-progress {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .achievement-reward {
+            font-size: 14px;
+            color: #f39c12;
+            font-weight: 600;
+        }
+
+        .achievement-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-claim {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-redeem {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-locked {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .status-unlocked {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-claimed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 18px;
+            padding: 40px;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        /* 反馈弹窗样式 - 默认隐藏 */
+        .card-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card-modal.show {
+            display: flex;
+        }
+
+        .card-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            animation: modalAppear 0.3s ease-out;
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏆 成就系统</h1>
+        <div class="nav-buttons">
+            <a href="/index.html" class="nav-btn">抽卡</a>
+            <a href="/collection.html" class="nav-btn">卡包</a>
+            <a href="/profile.html" class="nav-btn">资料</a>
+            <a href="#" onclick="showFeedbackModal()" class="nav-btn">反馈</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-card">
+            <div class="stat-item">
+                <div class="stat-label">兑换点</div>
+                <div class="stat-value" id="exchangePoints">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">已解锁成就</div>
+                <div class="stat-value" id="unlockedCount">0</div>
+            </div>
+        </div>
+
+        <!-- 兑换信息卡片 -->
+        <div class="stats-card" style="flex-direction: column; align-items: flex-start; padding: 25px;">
+            <h3 style="width: 100%; margin-bottom: 15px; color: #333; font-size: 18px;">🎁 兑换信息</h3>
+            <div style="width: 100%; margin-bottom: 10px;">
+                <div class="stat-label">兑换地点</div>
+                <div style="font-size: 16px; color: #667eea; font-weight: 600;" id="redemptionLocation">加载中...</div>
+            </div>
+            <div style="width: 100%; margin-bottom: 15px;">
+                <div class="stat-label">本月兑换状态</div>
+                <div style="font-size: 14px; color: #666;" id="redemptionStatus">加载中...</div>
+            </div>
+            <button class="btn btn-redeem" id="redeemBtn" onclick="redeemPoints()" style="width: 100%;">兑换（消耗1兑换点）</button>
+        </div>
+
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+
+        <div id="achievementsContainer">
+            <div class="loading">加载中...</div>
+        </div>
+    </div>
+
+    <!-- 反馈弹窗 -->
+    <div class="card-modal" id="feedbackModal">
+        <div class="card-content" style="max-width: 500px;">
+            <h2 style="margin-bottom: 20px; color: #333;">📝 提交反馈</h2>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: #666; font-size: 14px;">反馈类型</label>
+                <select id="feedbackType" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                    <option value="bug">Bug反馈</option>
+                    <option value="suggestion">建议</option>
+                    <option value="other">其他</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: #666; font-size: 14px;">反馈内容</label>
+                <textarea id="feedbackContent" placeholder="请描述您遇到的问题或建议..." style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; min-height: 120px; resize: vertical; font-family: inherit;"></textarea>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="submitFeedback()" style="flex: 1;">提交</button>
+                <button class="btn btn-secondary" onclick="closeFeedbackModal()" style="flex: 1;">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        // 加载成就列表
+        async function loadAchievements() {
+            try {
+                const response = await fetch('/api/achievements', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('加载失败');
+                }
+
+                const data = await response.json();
+                renderAchievements(data.achievements || []);
+            } catch (error) {
+                showError('加载成就失败，请稍后重试');
+                document.getElementById('achievementsContainer').innerHTML = 
+                    '<div class="loading">加载失败</div>';
+            }
+        }
+
+        // 加载用户信息（获取兑换点）
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('exchangePoints').textContent = user.exchange_points || 0;
+                }
+            } catch (error) {
+                console.error('加载用户信息失败:', error);
+            }
+        }
+
+        // 加载兑换信息
+        async function loadRedemptionInfo() {
+            try {
+                const response = await fetch('/api/redemption-info', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('redemptionLocation').textContent = data.redemption_location || '未设置';
+                    
+                    const redeemBtn = document.getElementById('redeemBtn');
+                    if (data.has_redeemed) {
+                        document.getElementById('redemptionStatus').innerHTML = 
+                            `<span style="color: #f39c12;">✅ 已兑换</span><br><span style="font-size: 12px;">兑换时间: ${data.redeemed_at}</span>`;
+                        redeemBtn.disabled = true;
+                        redeemBtn.textContent = '本月已兑换';
+                        redeemBtn.style.opacity = '0.5';
+                    } else {
+                        if (data.exchange_points < 1) {
+                            document.getElementById('redemptionStatus').innerHTML = 
+                                '<span style="color: #e74c3c;">兑换点不足</span>';
+                            redeemBtn.disabled = true;
+                            redeemBtn.textContent = '兑换点不足';
+                            redeemBtn.style.opacity = '0.5';
+                        } else {
+                            document.getElementById('redemptionStatus').innerHTML = 
+                                '<span style="color: #27ae60;">可兑换</span>';
+                            redeemBtn.disabled = false;
+                            redeemBtn.textContent = `兑换（消耗1兑换点，剩余${data.exchange_points}点）`;
+                            redeemBtn.style.opacity = '1';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('加载兑换信息失败:', error);
+            }
+        }
+
+        // 兑换功能
+        async function redeemPoints() {
+            const redeemBtn = document.getElementById('redeemBtn');
+            if (redeemBtn.disabled) {
+                return;
+            }
+
+            if (!confirm('确定要兑换吗？将消耗1个兑换点，每月只能兑换一次。')) {
+                return;
+            }
+
+            redeemBtn.disabled = true;
+            redeemBtn.textContent = '兑换中...';
+
+            try {
+                const response = await fetch('/api/redeem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess(data.message + ' 兑换时间: ' + data.redeemed_at);
+                    setTimeout(() => {
+                        loadUserInfo();
+                        loadRedemptionInfo();
+                    }, 1000);
+                } else {
+                    showError(data.error || data.message || '兑换失败');
+                    redeemBtn.disabled = false;
+                    redeemBtn.textContent = '兑换（消耗1兑换点）';
+                }
+            } catch (error) {
+                showError('网络错误，请稍后重试');
+                redeemBtn.disabled = false;
+                redeemBtn.textContent = '兑换（消耗1兑换点）';
+            }
+        }
+
+        // 渲染成就列表
+        function renderAchievements(achievements) {
+            const container = document.getElementById('achievementsContainer');
+            container.innerHTML = '<div class="achievement-list"></div>';
+            const list = container.querySelector('.achievement-list');
+
+            let unlockedCount = 0;
+
+            achievements.forEach(ach => {
+                if (ach.unlocked) unlockedCount++;
+                
+                const iconClass = ach.claimed ? 'claimed' : (ach.unlocked ? 'unlocked' : 'locked');
+                const icon = ach.claimed ? '✅' : (ach.unlocked ? '🎯' : '🔒');
+                const statusClass = ach.claimed ? 'status-claimed' : (ach.unlocked ? 'status-unlocked' : 'status-locked');
+                const statusText = ach.claimed ? '已领取' : (ach.unlocked ? '可领取' : '未解锁');
+
+                const progressText = getProgressText(ach.achievement_type.code, ach.progress);
+
+                const item = document.createElement('div');
+                item.className = 'achievement-item';
+                item.innerHTML = `
+                    <div class="achievement-icon ${iconClass}">${icon}</div>
+                    <div class="achievement-content">
+                        <div class="achievement-title">
+                            ${ach.achievement_type.name}
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="achievement-description">${ach.achievement_type.description}</div>
+                        ${progressText ? `<div class="achievement-progress">${progressText}</div>` : ''}
+                        <div class="achievement-reward">奖励: ${ach.achievement_type.reward_points} 兑换点</div>
+                    </div>
+                    <div class="achievement-actions">
+                        ${ach.unlocked && !ach.claimed && verifyAchievementCondition(ach.achievement_type.code, ach.progress) ? 
+                            `<button class="btn btn-claim" onclick="claimReward(${ach.achievement_type.id})">领取奖励</button>` : 
+                            ''
+                        }
+                        ${ach.claimed ? 
+                            `<button class="btn btn-redeem" onclick="showRedeemInfo()">兑换说明</button>` : 
+                            ''
+                        }
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+
+            document.getElementById('unlockedCount').textContent = unlockedCount;
+        }
+
+        // 获取进度文本
+        function getProgressText(code, progress) {
+            if (!progress) return '';
+            
+            switch (code) {
+                case 'first_card':
+                    return `进度: ${progress.current}/${progress.target}`;
+                case 'complete_series':
+                    return `已收集: ${progress.card_count} 张卡片`;
+                case 'milestone_7':
+                    return `当前: ${progress.current} 张，下一里程碑: ${progress.next_milestone} 张`;
+                default:
+                    return '';
+            }
+        }
+
+        // 验证成就条件是否满足（前端验证，与后端保持一致）
+        function verifyAchievementCondition(code, progress) {
+            if (!progress) return false;
+            
+            switch (code) {
+                case 'first_card':
+                    return progress.current >= progress.target;
+                case 'complete_series':
+                    // 这个需要后端验证，前端暂不验证
+                    return true;
+                case 'milestone_7':
+                    // 必须是7的倍数且>=7
+                    return progress.current >= 7 && progress.current % 7 === 0;
+                default:
+                    return false;
+            }
+        }
+
+        // 领取奖励
+        async function claimReward(achievementTypeId) {
+            try {
+                const response = await fetch('/api/claim-reward', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        achievement_type_id: achievementTypeId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess(data.message || '奖励领取成功！');
+                    setTimeout(() => {
+                        loadAchievements();
+                        loadUserInfo();
+                    }, 1000);
+                } else {
+                    showError(data.error || '领取失败');
+                }
+            } catch (error) {
+                showError('网络错误，请稍后重试');
+            }
+        }
+
+        // 显示兑换说明
+        function showRedeemInfo() {
+            alert('兑换说明：\n\n1. 兑换需要在指定地点进行\n2. 每月只能兑换一次\n3. 需要消耗1个兑换点\n4. 请到现场使用"兑换"功能');
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        // 显示成功信息
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.textContent = message;
+            successDiv.classList.add('show');
+            setTimeout(() => {
+                successDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        // 显示反馈弹窗
+        function showFeedbackModal() {
+            document.getElementById('feedbackModal').classList.add('show');
+            document.getElementById('feedbackContent').value = '';
+            document.getElementById('feedbackType').value = 'bug';
+        }
+
+        // 关闭反馈弹窗
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').classList.remove('show');
+        }
+
+        // 提交反馈
+        async function submitFeedback() {
+            const content = document.getElementById('feedbackContent').value.trim();
+            const type = document.getElementById('feedbackType').value;
+
+            if (!content) {
+                showError('请输入反馈内容');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                        type: type
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess(data.message || '反馈提交成功！');
+                    setTimeout(() => {
+                        closeFeedbackModal();
+                    }, 1500);
+                } else {
+                    showError(data.error || '提交失败，请稍后重试');
+                }
+            } catch (error) {
+                showError('网络错误，请稍后重试');
+            }
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('feedbackModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeFeedbackModal();
+            }
+        });
+
+        // 页面加载时获取数据
+        window.addEventListener('load', function() {
+            loadAchievements();
+            loadUserInfo();
+            loadRedemptionInfo();
+        });
+    </script>
+</body>
+</html>
+

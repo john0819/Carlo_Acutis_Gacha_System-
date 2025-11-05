@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的卡包 - 抽卡WebApp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px;
+            padding-top: 80px;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .header .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .nav-btn:hover {
+            background: #5568d3;
+        }
+
+        /* 移动端响应式 */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+
+            .header h1 {
+                font-size: 18px;
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .header .nav-buttons {
+                gap: 5px;
+            }
+
+            .nav-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px;
+            }
+
+            .header h1 {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .header .nav-buttons {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .nav-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stats {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stats-text {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .stats-number {
+            font-size: 32px;
+            font-weight: 600;
+            color: #667eea;
+            margin-top: 5px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .card-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .card-info {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .card-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .card-rarity {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .rarity-common {
+            color: #666;
+        }
+
+        .rarity-rare {
+            color: #4a90e2;
+        }
+
+        .rarity-epic {
+            color: #9b59b6;
+        }
+
+        .rarity-legendary {
+            color: #f39c12;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 18px;
+            padding: 40px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        .empty-state-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* 卡片详情弹窗 */
+        .card-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card-modal.show {
+            display: flex;
+        }
+
+        .card-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalAppear 0.3s ease-out;
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f0f0f0;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+
+        .close-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .card-modal-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card-modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .card-modal-rarity {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .card-modal-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .card-modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📚 我的卡包</h1>
+        <div class="nav-buttons">
+            <a href="/index.html" class="nav-btn">抽卡</a>
+            <a href="/profile.html" class="nav-btn">资料</a>
+            <a href="#" onclick="logout()" class="nav-btn">退出</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stats-text">我的卡片总数</div>
+            <div class="stats-number" id="cardCount">0</div>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div id="cardsContainer">
+            <div class="loading">加载中...</div>
+        </div>
+    </div>
+
+    <!-- 卡片详情弹窗 -->
+    <div class="card-modal" id="cardModal">
+        <div class="card-modal-content">
+            <button class="close-btn" onclick="closeCardModal()">×</button>
+            <img id="modalCardImage" class="card-modal-image" src="" alt="卡片">
+            <div class="card-modal-title" id="modalCardName">卡片名称</div>
+            <div class="card-modal-rarity" id="modalCardRarity">稀有度</div>
+            <div class="card-modal-description" id="modalCardDescription">卡片描述</div>
+            <div class="card-modal-actions">
+                <button class="btn btn-primary" onclick="downloadCard()">💾 保存到本地</button>
+                <button class="btn btn-secondary" onclick="closeCardModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        let currentCardId = null;
+        let cards = [];
+
+        // 加载用户卡片
+        async function loadUserCards() {
+            try {
+                const response = await fetch('/api/user/cards', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('加载失败');
+                }
+
+                const data = await response.json();
+                cards = data.cards || [];
+                
+                document.getElementById('cardCount').textContent = data.count || 0;
+                renderCards(cards);
+            } catch (error) {
+                showError('加载卡片失败，请稍后重试');
+                document.getElementById('cardsContainer').innerHTML = 
+                    '<div class="loading">加载失败</div>';
+            }
+        }
+
+        // 渲染卡片网格
+        function renderCards(cards) {
+            const container = document.getElementById('cardsContainer');
+            
+            if (cards.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-text">你还没有任何卡片<br>快去抽卡吧！</div>
+                        <a href="/index.html" class="empty-state-btn">去抽卡</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '<div class="cards-grid"></div>';
+            const grid = container.querySelector('.cards-grid');
+
+            cards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card-item';
+                cardElement.onclick = () => showCardDetail(card.id);
+                
+                const rarityClass = `rarity-${card.rarity || 'common'}`;
+                
+                cardElement.innerHTML = `
+                    <img src="${card.image_url}" alt="${card.name}" class="card-image" 
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'150\\' height=\\'200\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'150\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23999\\'%3E图片加载失败%3C/text%3E%3C/svg%3E'">
+                    <div class="card-info">
+                        <div class="card-name">${card.name}</div>
+                        <div class="card-rarity ${rarityClass}">${getRarityText(card.rarity)}</div>
+                    </div>
+                `;
+                
+                grid.appendChild(cardElement);
+            });
+        }
+
+        // 获取稀有度文本
+        function getRarityText(rarity) {
+            const rarityMap = {
+                'common': '普通',
+                'rare': '稀有',
+                'epic': '史诗',
+                'legendary': '传说'
+            };
+            return rarityMap[rarity] || '普通';
+        }
+
+        // 显示卡片详情
+        async function showCardDetail(cardId) {
+            currentCardId = cardId;
+            
+            try {
+                const response = await fetch(`/api/card/${cardId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('获取卡片详情失败');
+                }
+
+                const data = await response.json();
+                const card = data.card;
+
+                document.getElementById('modalCardImage').src = card.image_url;
+                document.getElementById('modalCardName').textContent = card.name;
+                document.getElementById('modalCardRarity').textContent = 
+                    `稀有度: ${getRarityText(card.rarity)}`;
+                document.getElementById('modalCardDescription').textContent = 
+                    card.description || '暂无描述';
+
+                document.getElementById('cardModal').classList.add('show');
+            } catch (error) {
+                showError('获取卡片详情失败');
+            }
+        }
+
+        // 关闭卡片详情弹窗
+        function closeCardModal() {
+            document.getElementById('cardModal').classList.remove('show');
+            currentCardId = null;
+        }
+
+        // 下载卡片（带水印）
+        async function downloadCard() {
+            if (!currentCardId) {
+                showError('卡片ID无效');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/card/${currentCardId}/download`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '下载失败');
+                }
+
+                // 获取图片blob
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `card_${currentCardId}.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                // 显示成功提示
+                alert('卡片已保存到本地！');
+            } catch (error) {
+                showError(error.message || '下载失败，请稍后重试');
+            }
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('cardModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCardModal();
+            }
+        });
+
+        // 页面加载时获取卡片列表
+        window.addEventListener('load', function() {
+            loadUserCards();
+        });
+    </script>
+</body>
+</html>
+

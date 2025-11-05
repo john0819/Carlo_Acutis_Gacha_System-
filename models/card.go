@@ -30,7 +30,18 @@ type DailyDraw struct {
 }
 
 type DrawResponse struct {
-	Card      Card   `json:"card"`
-	IsNewCard bool   `json:"is_new_card"`
-	Message   string `json:"message"`
+	Card            Card                `json:"card"`
+	IsNewCard       bool                `json:"is_new_card"`
+	Message         string              `json:"message"`
+	NewAchievements []AchievementStatus `json:"new_achievements,omitempty"`
+}
+
+type UserCardDetail struct {
+	ID          int       `json:"id" db:"id"`
+	Name        string    `json:"name" db:"name"`
+	ImageURL    string    `json:"image_url" db:"image_url"`
+	Rarity      string    `json:"rarity" db:"rarity"`
+	Description *string   `json:"description" db:"description"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	ObtainedAt  time.Time `json:"obtained_at" db:"obtained_at"`
 }

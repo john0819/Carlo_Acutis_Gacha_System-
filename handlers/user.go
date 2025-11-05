@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"h5project/auth"
 	"h5project/database"
@@ -186,10 +187,33 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req models.UpdateProfileRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendError(w, "无效的请求数据", http.StatusBadRequest)
+	// 先解析为map来处理birthday字符串
+	var rawData map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&rawData); err != nil {
+		sendError(w, "无效的请求数据: "+err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	var req models.UpdateProfileRequest
+
+	// 处理holy_name
+	if holyName, ok := rawData["holy_name"].(string); ok && holyName != "" {
+		req.HolyName = &holyName
+	}
+
+	// 处理nickname
+	if nickname, ok := rawData["nickname"].(string); ok && nickname != "" {
+		req.Nickname = &nickname
+	}
+
+	// 处理birthday（前端发送的是字符串格式 YYYY-MM-DD）
+	if birthdayStr, ok := rawData["birthday"].(string); ok && birthdayStr != "" {
+		birthday, err := time.Parse("2006-01-02", birthdayStr)
+		if err != nil {
+			sendError(w, "日期格式错误，请使用 YYYY-MM-DD 格式", http.StatusBadRequest)
+			return
+		}
+		req.Birthday = &birthday
 	}
 
 	// 更新用户信息

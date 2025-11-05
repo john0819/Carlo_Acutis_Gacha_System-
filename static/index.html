@@ -92,6 +92,124 @@
         .nav-btn:hover {
             transform: translateY(-2px);
         }
+
+        .draw-btn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .draw-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(245, 87, 108, 0.5);
+        }
+
+        .draw-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .draw-btn.draw-animation {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .card-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-modal.show {
+            display: flex;
+        }
+
+        .card-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            animation: cardAppear 0.5s ease-out;
+        }
+
+        @keyframes cardAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.8) rotateY(180deg);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) rotateY(0deg);
+            }
+        }
+
+        .card-content img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .card-message {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .new-card-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .close-btn {
+            padding: 10px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .close-btn:hover {
+            background: #5568d3;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +220,18 @@
     <div class="container">
         <div class="image-wrapper" id="imageWrapper">
             <div class="loading">加载中...</div>
+        </div>
+        <button class="draw-btn" id="drawBtn" onclick="drawCard()">🎴 抽卡</button>
+    </div>
+
+    <!-- 抽卡结果弹窗 -->
+    <div class="card-modal" id="cardModal">
+        <div class="card-content">
+            <div id="cardBadge" class="new-card-badge" style="display: none;">✨ 新卡片！</div>
+            <div class="card-title" id="cardTitle">卡片名称</div>
+            <img id="cardImage" src="" alt="卡片">
+            <div class="card-message" id="cardMessage">恭喜你抽到了卡片！</div>
+            <button class="close-btn" onclick="closeCardModal()">确定</button>
         </div>
     </div>
 
@@ -221,16 +351,117 @@
             img.src = imageUrl;
         }
 
-        // 页面加载时自动加载一张图片
-        window.addEventListener('load', function() {
-            loadRandomImage();
-        });
+        // 抽卡功能
+        async function drawCard() {
+            const drawBtn = document.getElementById('drawBtn');
+            drawBtn.disabled = true;
+            drawBtn.classList.add('draw-animation');
+            drawBtn.textContent = '抽卡中...';
 
-        // 每次打开页面都随机显示（可以通过URL参数控制）
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('refresh') === 'true') {
-            loadRandomImage();
+            try {
+                const response = await fetch('/api/draw', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 显示抽到的卡片
+                    showCardResult(data);
+                    // 更新显示的图片
+                    displayCard(data.card);
+                } else {
+                    alert(data.error || '抽卡失败');
+                    drawBtn.disabled = false;
+                    drawBtn.textContent = '🎴 抽卡';
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+                drawBtn.disabled = false;
+                drawBtn.textContent = '🎴 抽卡';
+            } finally {
+                drawBtn.classList.remove('draw-animation');
+            }
         }
+
+        function showCardResult(data) {
+            const modal = document.getElementById('cardModal');
+            const badge = document.getElementById('cardBadge');
+            const title = document.getElementById('cardTitle');
+            const image = document.getElementById('cardImage');
+            const message = document.getElementById('cardMessage');
+
+            title.textContent = data.card.name || '神秘卡片';
+            image.src = data.card.image_url;
+            message.textContent = data.message;
+
+            if (data.is_new_card) {
+                badge.style.display = 'inline-block';
+                badge.textContent = '✨ 新卡片！';
+            } else {
+                badge.style.display = 'inline-block';
+                badge.textContent = '🔄 重复卡片';
+                badge.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            }
+
+            modal.classList.add('show');
+        }
+
+        function closeCardModal() {
+            const modal = document.getElementById('cardModal');
+            modal.classList.remove('show');
+            const drawBtn = document.getElementById('drawBtn');
+            drawBtn.disabled = false;
+            drawBtn.textContent = '🎴 抽卡';
+        }
+
+        function displayCard(card) {
+            const imageWrapper = document.getElementById('imageWrapper');
+            imageWrapper.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = card.image_url;
+            img.className = 'fade-in';
+            img.alt = card.name;
+            imageWrapper.appendChild(img);
+        }
+
+        // 页面加载时检查今天是否已抽卡
+        async function checkTodayDraw() {
+            try {
+                const response = await fetch('/api/draw/check', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.has_drawn && data.card) {
+                        // 今天已抽卡，显示卡片
+                        displayCard(data.card);
+                        const drawBtn = document.getElementById('drawBtn');
+                        drawBtn.disabled = true;
+                        drawBtn.textContent = '✅ 今日已抽卡';
+                    } else {
+                        // 今天还没抽卡
+                        const drawBtn = document.getElementById('drawBtn');
+                        drawBtn.disabled = false;
+                        drawBtn.textContent = '🎴 抽卡';
+                    }
+                }
+            } catch (error) {
+                console.error('检查抽卡状态失败:', error);
+            }
+        }
+
+        // 页面加载时自动检查今天是否已抽卡
+        window.addEventListener('load', function() {
+            checkTodayDraw();
+        });
     </script>
 </body>
 </html>

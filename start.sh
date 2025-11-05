@@ -1,32 +1,57 @@
 #!/bin/bash
-# 简化的启动脚本
+# 启动服务器和内网穿透（公网访问）
 
 cd "$(dirname "$0")"
 
 echo "🚀 启动 H5 服务器和内网穿透"
+echo "================================"
 echo ""
 
-# 检查服务器
-if ! lsof -Pi :8080 -sTCP:LISTEN -t >/dev/null 2>&1; then
+# 1. 检查并启动数据库
+echo "📊 步骤1: 检查数据库"
+if ! docker ps | grep -q h5project_db; then
+    echo "启动数据库..."
+    ./start_db.sh
+    sleep 3
+fi
+echo "✅ 数据库运行中"
+
+# 2. 检查Go依赖
+if [ ! -f "go.sum" ]; then
+    echo "📦 下载依赖..."
+    go mod download
+    go mod tidy
+fi
+
+# 3. 检查并启动服务器
+echo ""
+echo "🌐 步骤2: 启动服务器"
+if lsof -Pi :8080 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    echo "✅ 服务器已在运行（端口 8080）"
+else
     echo "启动服务器..."
     go run main.go > server.log 2>&1 &
     sleep 2
+    echo "✅ 服务器已启动"
 fi
-echo "✅ 服务器运行中"
 
-# 检查并启动 ngrok
+# 4. 检查并启动 ngrok
+echo ""
+echo "🌐 步骤3: 启动内网穿透"
 if ! pgrep -f "ngrok http" > /dev/null; then
     echo "启动 ngrok..."
     ngrok http 8080 > ngrok.log 2>&1 &
     sleep 4
+    echo "✅ ngrok 已启动"
+else
+    echo "✅ ngrok 已在运行"
 fi
 
-# 获取公网地址
+# 5. 获取公网地址
 echo ""
-echo "获取公网地址..."
+echo "📱 步骤4: 获取公网地址..."
 sleep 2
 
-# 尝试多种方式获取地址
 PUBLIC_URL=""
 for i in {1..5}; do
     sleep 1
@@ -60,12 +85,14 @@ done
 
 echo ""
 if [ -n "$PUBLIC_URL" ]; then
-    FULL_URL="${PUBLIC_URL}/index.html"
+    FULL_URL="${PUBLIC_URL}/login.html"
     echo "═══════════════════════════════════════════════════"
-    echo "✅ 成功！公网地址："
+    echo "✅ 启动成功！"
+    echo ""
+    echo "🌐 公网访问地址："
     echo "   $FULL_URL"
     echo ""
-    echo "📱 下一步：打开二维码生成页面"
+    echo "📱 生成二维码："
     echo "   运行: open generate_qrcode.html"
     echo "   或手动打开: generate_qrcode.html"
     echo ""
@@ -75,7 +102,6 @@ if [ -n "$PUBLIC_URL" ]; then
     
     # 自动更新二维码页面的地址
     if [ -f "generate_qrcode.html" ]; then
-        # 使用 sed 更新 HTML 中的默认地址（macOS 兼容）
         if [[ "$OSTYPE" == "darwin"* ]]; then
             sed -i '' "s|value=\"https://[^\"]*\"|value=\"$FULL_URL\"|g" generate_qrcode.html
         else
@@ -90,10 +116,6 @@ if [ -n "$PUBLIC_URL" ]; then
 else
     echo "⚠️  无法自动获取地址"
     echo ""
-    echo "请访问控制台查看: http://localhost:4040"
+    echo "请访问 ngrok 控制台查看: http://localhost:4040"
     echo "或查看日志: tail -f ngrok.log"
-    echo ""
-    echo "如果看到认证错误，请重新配置:"
-    echo "  ngrok config add-authtoken 你的真实token"
 fi
-

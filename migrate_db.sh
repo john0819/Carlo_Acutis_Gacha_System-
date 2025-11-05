@@ -1,20 +1,18 @@
--- 用户表
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    holy_name VARCHAR(100),
-    nickname VARCHAR(100),
-    birthday DATE,
-    checkin_count INTEGER DEFAULT 0,
-    exchange_points INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+#!/bin/bash
+# 数据库迁移脚本 - 创建新的表结构
 
--- 创建索引
-CREATE INDEX IF NOT EXISTS idx_username ON users(username);
+echo "🔄 执行数据库迁移..."
+echo ""
 
+# 检查数据库是否运行
+if ! docker ps | grep -q h5project_db; then
+    echo "❌ 数据库未运行，请先启动数据库: ./start_db.sh"
+    exit 1
+fi
+
+echo "📊 创建卡片相关表..."
+
+docker exec -i h5project_db psql -U h5user -d h5project << 'EOF'
 -- 卡片表
 CREATE TABLE IF NOT EXISTS cards (
     id SERIAL PRIMARY KEY,
@@ -51,4 +49,15 @@ CREATE INDEX IF NOT EXISTS idx_user_cards_card_id ON user_cards(card_id);
 CREATE INDEX IF NOT EXISTS idx_daily_draws_user_id ON daily_draws(user_id);
 CREATE INDEX IF NOT EXISTS idx_daily_draws_draw_date ON daily_draws(draw_date);
 CREATE INDEX IF NOT EXISTS idx_daily_draws_user_date ON daily_draws(user_id, draw_date);
+EOF
+
+if [ $? -eq 0 ]; then
+    echo "✅ 数据库表创建成功！"
+    echo ""
+    echo "📋 已创建的表："
+    docker exec h5project_db psql -U h5user -d h5project -c "\dt" 2>/dev/null | grep -E "(cards|user_cards|daily_draws)"
+else
+    echo "❌ 数据库迁移失败"
+    exit 1
+fi
 

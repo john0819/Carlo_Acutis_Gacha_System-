@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>个人资料 - 抽卡WebApp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-group {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        .nav {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: inline-block;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>个人资料</h1>
+        
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+
+        <div class="info-card">
+            <h3>账号信息</h3>
+            <div class="stat-item">
+                <span class="stat-label">用户名</span>
+                <span class="stat-value" id="username">-</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">累计打卡次数</span>
+                <span class="stat-value" id="checkinCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">兑换点</span>
+                <span class="stat-value" id="exchangePoints">0</span>
+            </div>
+        </div>
+
+        <form id="profileForm">
+            <div class="form-group">
+                <label for="holyName">圣名</label>
+                <input type="text" id="holyName" placeholder="请输入圣名">
+            </div>
+            <div class="form-group">
+                <label for="nickname">昵称</label>
+                <input type="text" id="nickname" placeholder="请输入昵称">
+            </div>
+            <div class="form-group">
+                <label for="birthday">生日</label>
+                <input type="date" id="birthday">
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn">保存</button>
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='/index.html'">返回</button>
+            </div>
+        </form>
+
+        <div class="nav">
+            <a href="/index.html">返回主页</a>
+            <a href="#" onclick="logout()">退出登录</a>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        // 加载用户信息
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                const user = await response.json();
+                
+                document.getElementById('username').textContent = user.username;
+                document.getElementById('checkinCount').textContent = user.checkin_count || 0;
+                document.getElementById('exchangePoints').textContent = user.exchange_points || 0;
+                
+                if (user.holy_name) {
+                    document.getElementById('holyName').value = user.holy_name;
+                }
+                if (user.nickname) {
+                    document.getElementById('nickname').value = user.nickname;
+                }
+                if (user.birthday) {
+                    const date = new Date(user.birthday);
+                    document.getElementById('birthday').value = date.toISOString().split('T')[0];
+                }
+            } catch (error) {
+                showError('加载用户信息失败');
+            }
+        }
+
+        // 更新资料
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const holyName = document.getElementById('holyName').value.trim() || null;
+            const nickname = document.getElementById('nickname').value.trim() || null;
+            const birthday = document.getElementById('birthday').value || null;
+
+            const updateData = {};
+            if (holyName) updateData.holy_name = holyName;
+            if (nickname) updateData.nickname = nickname;
+            if (birthday) updateData.birthday = birthday;
+
+            try {
+                const response = await fetch('/api/user/profile/update', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (response.ok) {
+                    showSuccess('保存成功');
+                    setTimeout(() => loadProfile(), 500);
+                } else {
+                    const data = await response.json();
+                    showError(data.error || '保存失败');
+                }
+            } catch (error) {
+                showError('网络错误，请稍后重试');
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => errorDiv.classList.remove('show'), 3000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.textContent = message;
+            successDiv.classList.add('show');
+            setTimeout(() => successDiv.classList.remove('show'), 3000);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        // 页面加载时获取用户信息
+        loadProfile();
+    </script>
+</body>
+</html>
+

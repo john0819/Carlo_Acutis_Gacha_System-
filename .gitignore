@@ -1,0 +1,49 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# 图片文件（如果不想提交可以取消注释）
+# images/*.jpg
+# images/*.png
+# images/*.gif
+
+# 二维码图片
+qrcode.png
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+server.log
+ngrok.log
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 环境变量文件
+.env
+.env.local
+
+# 临时文件
+tmp/
+temp/
+
+# Vendor目录（如果使用）
+vendor/

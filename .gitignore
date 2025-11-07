@@ -47,3 +47,6 @@ temp/
 
 # Vendor目录（如果使用）
 vendor/
+
+# image
+images/

@@ -1,7 +1,17 @@
 #!/bin/bash
 # 更新卡片数据 - 从images目录同步图片到数据库
+# ⚠️ 警告：此脚本会清空所有用户卡包和抽卡记录！
 
 echo "🔄 更新卡片数据..."
+echo ""
+echo "⚠️  警告：此操作会清空所有用户卡包和每日抽卡记录！"
+echo "   如果只想添加新图片，请使用: ./update_cards_safe.sh"
+echo ""
+read -p "确认继续？(y/N): " confirm
+if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+    echo "❌ 已取消"
+    exit 0
+fi
 echo ""
 
 # 检查数据库是否运行

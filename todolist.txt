@@ -5,7 +5,7 @@
 ./migrate_db.sh
 
 更新图片集：
-./update_cards.sh
+./update_cards_safe.sh
 
 启动测试：
 ./dev.sh
@@ -14,11 +14,10 @@
 ./start.sh
 ./stop.sh
 
+docker-compose stop
 
 优化：
-1. 反馈界面
-2. 介绍、简介
-3. 
+
 
 兑换点的位置 具体地点替换
 redemptionLocation

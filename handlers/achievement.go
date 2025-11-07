@@ -300,6 +300,26 @@ func GetAchievements(w http.ResponseWriter, r *http.Request) {
 		// 设置进度信息
 		status.Progress = getAchievementProgress(userID, achType.Code)
 
+		// 验证：如果成就已解锁但条件不满足，清除解锁状态（修复历史错误数据）
+		if status.Unlocked && !status.Claimed {
+			if !verifyAchievementCondition(userID, achType.Code) {
+				// 条件不满足，清除解锁状态
+				status.Unlocked = false
+				status.UnlockedAt = nil
+				// 从数据库中删除错误的解锁记录
+				var achievementTypeID int
+				if err := database.DB.QueryRow(
+					"SELECT id FROM achievement_types WHERE code = $1",
+					achType.Code,
+				).Scan(&achievementTypeID); err == nil {
+					database.DB.Exec(
+						"DELETE FROM user_achievements WHERE user_id = $1 AND achievement_type_id = $2 AND claimed_at IS NULL",
+						userID, achievementTypeID,
+					)
+				}
+			}
+		}
+
 		achievements = append(achievements, *status)
 	}
 

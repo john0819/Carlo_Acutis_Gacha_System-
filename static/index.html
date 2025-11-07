@@ -13,35 +13,126 @@
 
         body {
             width: 100%;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: flex-start;
             align-items: center;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            overflow: hidden;
+            padding: 20px;
+            padding-top: 100px;
+            padding-bottom: 40px;
+        }
+
+        /* 每日语录卡片 */
+        .daily-quote {
+            width: 90%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            text-align: center;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .daily-quote::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            background-image: 
+                linear-gradient(to right, transparent 48%, #f39c12 48%, #f39c12 52%, transparent 52%),
+                linear-gradient(to bottom, transparent 48%, #f39c12 48%, #f39c12 52%, transparent 52%);
+        }
+
+        .quote-icon {
+            font-size: 28px;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+
+        .quote-text {
+            font-size: 17px;
+            line-height: 1.9;
+            color: #333;
+            font-style: italic;
+            margin-bottom: 12px;
+            padding: 0 10px;
+        }
+
+        .quote-date {
+            font-size: 12px;
+            color: #999;
+            margin-top: 12px;
         }
 
         .container {
             width: 90%;
             max-width: 600px;
             text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .daily-quote {
+            position: relative;
+            z-index: 1;
         }
 
         .image-wrapper {
             width: 100%;
-            max-height: 100vh;
+            min-height: 300px;
             border-radius: 20px;
-            overflow: hidden;
+            overflow: visible;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             background: #fff;
-            padding: 10px;
+            padding: 15px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-wrapper::before {
+            content: '✨';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 24px;
+            z-index: 10;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        .image-wrapper::after {
+            content: '✨';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            z-index: 10;
+            animation: twinkle 2s ease-in-out infinite 0.5s;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
         }
 
         .image-wrapper img {
-            width: 100%;
+            max-width: 100%;
+            max-height: 65vh;
+            width: auto;
             height: auto;
-            max-height: 70vh;
             object-fit: contain;
             display: block;
             border-radius: 10px;
@@ -71,9 +162,51 @@
 
         .nav {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-left {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .info-btn-nav {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid #667eea;
+            color: #667eea;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .info-btn-nav:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: scale(1.1);
         }
 
         .nav-btn {
@@ -97,53 +230,92 @@
         /* 移动端响应式 */
         @media (max-width: 768px) {
             .nav {
-                top: 10px;
-                right: 10px;
+                padding: 10px 15px;
+            }
+
+            .nav-left, .nav-right {
+                gap: 5px;
             }
 
             .nav-btn {
                 padding: 8px 12px;
                 font-size: 12px;
-                margin-left: 5px;
+                margin-left: 0;
+            }
+
+            .info-btn-nav {
+                width: 28px;
+                height: 28px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .nav-left, .nav-right {
+                width: 100%;
+                justify-content: center;
                 margin-bottom: 5px;
             }
 
-            /* 如果屏幕更小，让按钮换行 */
-            @media (max-width: 480px) {
-                .nav {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: flex-end;
-                    max-width: calc(100% - 20px);
-                }
-
-                .nav-btn {
-                    margin-left: 0;
-                    margin-bottom: 8px;
-                    width: auto;
-                    text-align: center;
-                    min-width: 80px;
-                }
+            .nav-btn {
+                margin-left: 0;
+                margin-bottom: 5px;
+                width: auto;
+                text-align: center;
+                min-width: 80px;
             }
         }
 
         .draw-btn {
-            margin-top: 20px;
-            padding: 15px 40px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            margin-top: 25px;
+            padding: 18px 45px;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
             color: white;
             border: none;
-            border-radius: 30px;
-            font-size: 18px;
+            border-radius: 35px;
+            font-size: 20px;
             font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+            box-shadow: 0 12px 35px rgba(243, 156, 18, 0.4);
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .draw-btn::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            background-image: 
+                linear-gradient(to right, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%),
+                linear-gradient(to bottom, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%);
+        }
+
+        .draw-btn::after {
+            content: '';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            background-image: 
+                linear-gradient(to right, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%),
+                linear-gradient(to bottom, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%);
         }
 
         .draw-btn:hover:not(:disabled) {
             transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(245, 87, 108, 0.5);
+            box-shadow: 0 15px 40px rgba(243, 156, 18, 0.5);
         }
 
         .draw-btn:disabled {
@@ -185,6 +357,23 @@
             width: 90%;
             text-align: center;
             animation: cardAppear 0.5s ease-out;
+            position: relative;
+        }
+
+        .card-content::before {
+            content: '✨';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+        }
+
+        .card-content::after {
+            content: '✨';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
         }
 
         @keyframes cardAppear {
@@ -309,21 +498,208 @@
             font-weight: 600;
             margin-bottom: 20px;
         }
+
+        /* 系统介绍弹窗样式 */
+        .intro-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .intro-modal.show {
+            display: flex;
+        }
+
+        .intro-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalAppear 0.3s ease-out;
+        }
+
+        .intro-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .intro-content .intro-section {
+            margin-bottom: 20px;
+        }
+
+        .intro-content .intro-section h3 {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .intro-content .intro-section p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 8px;
+        }
+
+        .intro-content .intro-section ul {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.8;
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+
+        .intro-content .intro-section li {
+            margin-bottom: 5px;
+        }
+
+        .close-intro {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .close-intro:hover {
+            background: #e0e0e0;
+            transform: rotate(90deg);
+        }
+
+        /* 倒计时容器样式 */
+        .countdown-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .countdown-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .countdown-content {
+            flex: 1;
+        }
+
+        .countdown-label {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .countdown-time {
+            font-size: 24px;
+            font-weight: 600;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        /* Toast提示样式 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 90%;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: rgba(76, 175, 80, 0.95);
+        }
+
+        .toast.error {
+            background: rgba(244, 67, 54, 0.95);
+        }
+
+        .toast.info {
+            background: rgba(33, 150, 243, 0.95);
+        }
     </style>
 </head>
 <body>
     <div class="nav">
-        <a href="/collection.html" class="nav-btn">我的卡包</a>
-        <a href="/achievements.html" class="nav-btn">成就</a>
-        <a href="/profile.html" class="nav-btn">个人资料</a>
-        <a href="#" onclick="showFeedbackModal()" class="nav-btn">反馈</a>
-        <a href="#" onclick="logout()" class="nav-btn">退出</a>
+        <div class="nav-left">
+            <a href="/collection.html" class="nav-btn">我的卡包</a>
+            <a href="/achievements.html" class="nav-btn">成就</a>
+            <a href="/profile.html" class="nav-btn">个人资料</a>
+        </div>
+        <div class="nav-right">
+            <a href="#" onclick="showIntro(); return false;" class="info-btn-nav" title="了解系统">ℹ️</a>
+            <a href="#" onclick="showFeedbackModal(); return false;" class="nav-btn">反馈</a>
+            <a href="#" onclick="logout(); return false;" class="nav-btn">退出</a>
+        </div>
     </div>
+    
+    <!-- 每日语录 -->
+    <div class="daily-quote" id="dailyQuote">
+        <div class="quote-icon">💭</div>
+        <div class="quote-text" id="quoteText">加载中...</div>
+        <div class="quote-date" id="quoteDate"></div>
+    </div>
+
     <div class="container">
         <div class="image-wrapper" id="imageWrapper">
             <div class="loading">加载中...</div>
         </div>
-        <button class="draw-btn" id="drawBtn" onclick="drawCard()">🎴 抽卡</button>
+        
+        <button class="draw-btn" id="drawBtn" onclick="drawCard()">抽卡</button>
+        <div class="countdown-container" id="countdownContainer" style="display: none;">
+            <div class="countdown-icon">⏰</div>
+            <div class="countdown-content">
+                <div class="countdown-label">距离下次抽卡</div>
+                <div class="countdown-time" id="countdownTime">--:--:--</div>
+            </div>
+        </div>
     </div>
 
     <!-- 抽卡结果弹窗 -->
@@ -367,6 +743,56 @@
             <div style="display: flex; gap: 10px;">
                 <button class="btn btn-primary" onclick="submitFeedback()" style="flex: 1;">提交</button>
                 <button class="btn btn-secondary" onclick="closeFeedbackModal()" style="flex: 1;">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系统介绍弹窗 -->
+    <div class="intro-modal" id="introModal">
+        <div class="intro-content">
+            <button class="close-intro" onclick="closeIntro()">×</button>
+            <h2>📖 系统介绍</h2>
+            
+            <div class="intro-section">
+                <h3>🎴 每日抽卡</h3>
+                <p>每天可以抽取一张卡片，新卡概率70%，重复卡片概率30%。抽到新卡会自动加入您的卡包。</p>
+                <p style="color: #999; font-size: 12px;">💡 提示：每天只能抽一次，记得每天来打卡哦！</p>
+            </div>
+
+            <div class="intro-section">
+                <h3>🏆 成就系统</h3>
+                <p>完成特定条件可以解锁成就：</p>
+                <ul>
+                    <li><strong>第一张卡：</strong>获得第一张卡片（奖励1兑换点）</li>
+                    <li><strong>集齐系列：</strong>集齐一个系列的所有卡片（奖励5兑换点）</li>
+                    <li><strong>收集里程碑：</strong>每收集7张不重复卡片（奖励1兑换点）</li>
+                </ul>
+                <p>解锁成就后记得去成就页面领取兑换点奖励！</p>
+            </div>
+
+            <div class="intro-section">
+                <h3>💰 兑换系统</h3>
+                <p>使用兑换点可以到指定地点兑换实物奖励：</p>
+                <ul>
+                    <li>完成成就后可领取兑换点</li>
+                    <li>每月只能兑换一次</li>
+                    <li>每次兑换消耗1个兑换点</li>
+                    <li>兑换地点：罗源的角落</li>
+                </ul>
+            </div>
+
+            <div class="intro-section">
+                <h3>📚 卡包管理</h3>
+                <p>在卡包页面可以查看所有收集的卡片，点击卡片可以查看详情并保存到本地（带水印）。</p>
+            </div>
+
+            <div class="intro-section">
+                <h3>💭 每日语录</h3>
+                <p>每天都会显示一句不同的天主教语录，为您带来每日的灵性启发。</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <button class="btn" onclick="closeIntro()" style="padding: 10px 30px;">我知道了</button>
             </div>
         </div>
     </div>
@@ -479,6 +905,11 @@
             img.onload = function() {
                 imageWrapper.innerHTML = '';
                 img.className = 'fade-in';
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '65vh';
+                img.style.width = 'auto';
+                img.style.height = 'auto';
+                img.style.objectFit = 'contain';
                 imageWrapper.appendChild(img);
             };
             img.onerror = function() {
@@ -515,15 +946,20 @@
                             showAchievementNotification(data.new_achievements);
                         }, 1500);
                     }
+                    // 更新按钮状态和启动倒计时
+                    const drawBtn = document.getElementById('drawBtn');
+                    drawBtn.disabled = true;
+                    drawBtn.textContent = '✅ 今日已抽卡';
+                    startCountdown();
                 } else {
-                    alert(data.error || '抽卡失败');
+                    showToast(data.error || '抽卡失败', 'error');
                     drawBtn.disabled = false;
-                    drawBtn.textContent = '🎴 抽卡';
+                    drawBtn.textContent = '抽卡';
                 }
             } catch (error) {
-                alert('网络错误，请稍后重试');
+                showToast('网络错误，请稍后重试', 'error');
                 drawBtn.disabled = false;
-                drawBtn.textContent = '🎴 抽卡';
+                drawBtn.textContent = '抽卡';
             } finally {
                 drawBtn.classList.remove('draw-animation');
             }
@@ -557,7 +993,7 @@
             modal.classList.remove('show');
             const drawBtn = document.getElementById('drawBtn');
             drawBtn.disabled = false;
-            drawBtn.textContent = '🎴 抽卡';
+            drawBtn.textContent = '抽卡';
         }
 
         function displayCard(card) {
@@ -567,7 +1003,99 @@
             img.src = card.image_url;
             img.className = 'fade-in';
             img.alt = card.name;
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '65vh';
+            img.style.width = 'auto';
+            img.style.height = 'auto';
+            img.style.objectFit = 'contain';
             imageWrapper.appendChild(img);
+        }
+
+        // Toast提示函数
+        function showToast(message, type = 'info', duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, duration);
+        }
+
+        // 计算倒计时
+        let countdownInterval = null;
+        
+        function updateCountdown() {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            
+            const diff = tomorrow - now;
+            
+            if (diff <= 0) {
+                // 已经是明天了，可以抽卡
+                const countdownContainer = document.getElementById('countdownContainer');
+                if (countdownContainer) {
+                    countdownContainer.style.display = 'none';
+                }
+                const drawBtn = document.getElementById('drawBtn');
+                if (drawBtn) {
+                    drawBtn.disabled = false;
+                    drawBtn.textContent = '抽卡';
+                }
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                }
+                return;
+            }
+            
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            const countdownTime = document.getElementById('countdownTime');
+            const countdownContainer = document.getElementById('countdownContainer');
+            
+            if (countdownTime && countdownContainer) {
+                // 格式化显示：HH:MM:SS
+                const formatTime = (num) => String(num).padStart(2, '0');
+                countdownTime.textContent = `${formatTime(hours)}:${formatTime(minutes)}:${formatTime(seconds)}`;
+                countdownContainer.style.display = 'flex';
+            }
+        }
+
+        // 启动倒计时
+        function startCountdown() {
+            // 清除旧的倒计时
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            // 立即更新一次
+            updateCountdown();
+            // 每秒更新一次
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+
+        // 停止倒计时
+        function stopCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            const countdownContainer = document.getElementById('countdownContainer');
+            if (countdownContainer) {
+                countdownContainer.style.display = 'none';
+            }
         }
 
         // 页面加载时检查今天是否已抽卡
@@ -588,11 +1116,15 @@
                         const drawBtn = document.getElementById('drawBtn');
                         drawBtn.disabled = true;
                         drawBtn.textContent = '✅ 今日已抽卡';
+                        // 启动倒计时
+                        startCountdown();
                     } else {
                         // 今天还没抽卡
                         const drawBtn = document.getElementById('drawBtn');
                         drawBtn.disabled = false;
-                        drawBtn.textContent = '🎴 抽卡';
+                        drawBtn.textContent = '抽卡';
+                        // 确保倒计时隐藏
+                        stopCountdown();
                     }
                 }
             } catch (error) {
@@ -618,6 +1150,23 @@
         function closeAchievementNotification() {
             document.getElementById('achievementNotification').classList.remove('show');
         }
+
+        // 显示系统介绍
+        function showIntro() {
+            document.getElementById('introModal').classList.add('show');
+        }
+
+        // 关闭系统介绍
+        function closeIntro() {
+            document.getElementById('introModal').classList.remove('show');
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('introModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeIntro();
+            }
+        });
 
         // 显示反馈弹窗
         function showFeedbackModal() {
@@ -674,9 +1223,41 @@
             }
         });
 
+        // 加载每日语录
+        async function loadDailyQuote() {
+            try {
+                const response = await fetch('/api/daily-quote');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('quoteText').textContent = data.quote;
+                    const date = new Date(data.date);
+                    document.getElementById('quoteDate').textContent = 
+                        `${date.getMonth() + 1}月${date.getDate()}日 每日语录`;
+                } else {
+                    document.getElementById('quoteText').textContent = 
+                        '天主是爱，住在爱内的，就住在天主内。';
+                }
+            } catch (error) {
+                console.error('加载语录失败:', error);
+                document.getElementById('quoteText').textContent = 
+                    '天主是爱，住在爱内的，就住在天主内。';
+            }
+        }
+
         // 页面加载时自动检查今天是否已抽卡
         window.addEventListener('load', function() {
+            loadDailyQuote();
             checkTodayDraw();
+        });
+
+        // 页面可见性变化时，如果已抽卡则重新启动倒计时
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                const drawBtn = document.getElementById('drawBtn');
+                if (drawBtn && drawBtn.disabled && drawBtn.textContent === '✅ 今日已抽卡') {
+                    startCountdown();
+                }
+            }
         });
     </script>
 </body>

@@ -39,6 +39,7 @@ func main() {
 	http.HandleFunc("/api/redemption-info", auth.JWTMiddleware(handlers.GetRedemptionInfo))
 	http.HandleFunc("/api/feedback", auth.JWTMiddleware(handlers.SubmitFeedback))
 	http.HandleFunc("/api/feedbacks", auth.JWTMiddleware(handlers.GetFeedbacks))
+	http.HandleFunc("/api/daily-quote", handlers.GetDailyQuote)
 
 	// 图片目录
 	imageFs := http.FileServer(http.Dir("./images"))

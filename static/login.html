@@ -20,6 +20,40 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            z-index: 0;
+            pointer-events: none;
+            background-image: 
+                linear-gradient(to right, transparent 48%, rgba(255,255,255,0.03) 48%, rgba(255,255,255,0.03) 52%, transparent 52%),
+                linear-gradient(to bottom, transparent 48%, rgba(255,255,255,0.03) 48%, rgba(255,255,255,0.03) 52%, transparent 52%);
+        }
+
+        body::after {
+            content: '✨';
+            position: fixed;
+            top: 15%;
+            left: 10%;
+            font-size: 40px;
+            color: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+            pointer-events: none;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
         }
 
         .container {
@@ -29,13 +63,61 @@
             border-radius: 20px;
             padding: 40px 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            background-image: 
+                linear-gradient(to right, transparent 48%, #f39c12 48%, #f39c12 52%, transparent 52%),
+                linear-gradient(to bottom, transparent 48%, #f39c12 48%, #f39c12 52%, transparent 52%);
         }
 
         h1 {
             text-align: center;
             color: #333;
             margin-bottom: 30px;
+            margin-top: 20px;
             font-size: 28px;
+            position: relative;
+            padding: 0 40px;
+        }
+
+        h1::before {
+            content: '✨';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            opacity: 0.7;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        h1::after {
+            content: '✨';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            opacity: 0.7;
+            animation: twinkle 2s ease-in-out infinite 0.5s;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.7; transform: translateY(-50%) scale(1); }
+            50% { opacity: 1; transform: translateY(-50%) scale(1.1); }
         }
 
         .form-group {
@@ -61,11 +143,12 @@
         input:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .btn {
             width: 100%;
-            padding: 14px;
+            padding: 14px 14px 14px 50px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
@@ -75,6 +158,34 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             margin-top: 10px;
+            position: relative;
+            text-align: center;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background-image: 
+                linear-gradient(to right, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%),
+                linear-gradient(to bottom, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%);
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background-image: 
+                linear-gradient(to right, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%),
+                linear-gradient(to bottom, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%);
         }
 
         .btn:hover {
@@ -127,20 +238,161 @@
         .loading.show {
             display: block;
         }
+
+        .help-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            line-height: 1.5;
+        }
+
+        .info-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid #667eea;
+            color: #667eea;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .info-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: scale(1.1);
+        }
+
+        .intro-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .intro-modal.show {
+            display: flex;
+        }
+
+        .intro-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalAppear 0.3s ease-out;
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .intro-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .intro-content .intro-section {
+            margin-bottom: 20px;
+        }
+
+        .intro-content .intro-section h3 {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .intro-content .intro-section p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 8px;
+        }
+
+        .intro-content .intro-section ul {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.8;
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+
+        .intro-content .intro-section li {
+            margin-bottom: 5px;
+        }
+
+        .close-intro {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .close-intro:hover {
+            background: #e0e0e0;
+            transform: rotate(90deg);
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <button class="info-btn" onclick="showIntro()" title="了解系统">ℹ️</button>
         <h1 id="title">登录</h1>
         <div class="error" id="error"></div>
         <form id="authForm">
             <div class="form-group">
                 <label for="username">账号</label>
-                <input type="text" id="username" name="username" required autocomplete="username">
+                <input type="text" id="username" name="username" required autocomplete="username" placeholder="请输入您的账号">
+                <div class="help-text" id="usernameHelp" style="display: none;">
+                    💡 账号可以是您的用户名或手机号
+                </div>
             </div>
             <div class="form-group">
                 <label for="password">密码</label>
-                <input type="password" id="password" name="password" required autocomplete="current-password" minlength="6">
+                <input type="password" id="password" name="password" required autocomplete="current-password" minlength="6" placeholder="请输入密码（至少6位）">
+                <div class="help-text" id="passwordHelp" style="display: none;">
+                    💡 密码长度至少6位，建议包含字母和数字
+                </div>
             </div>
             <button type="submit" class="btn" id="submitBtn">登录</button>
             <div class="loading" id="loading">登录中...</div>
@@ -148,6 +400,49 @@
         <div class="switch-mode">
             <span id="switchText">还没有账号？</span>
             <a href="#" id="switchBtn">立即注册</a>
+        </div>
+    </div>
+
+    <!-- 系统介绍弹窗 -->
+    <div class="intro-modal" id="introModal">
+        <div class="intro-content">
+            <button class="close-intro" onclick="closeIntro()">×</button>
+            <h2>📖 系统介绍</h2>
+            
+            <div class="intro-section">
+                <h3>🎴 每日抽卡</h3>
+                <p>每天可以抽取一张卡片，新卡概率70%，重复卡片概率30%。抽到新卡会自动加入您的卡包。</p>
+            </div>
+
+            <div class="intro-section">
+                <h3>🏆 成就系统</h3>
+                <p>完成特定条件可以解锁成就：</p>
+                <ul>
+                    <li><strong>第一张卡：</strong>获得第一张卡片</li>
+                    <li><strong>集齐系列：</strong>集齐一个系列的所有卡片</li>
+                    <li><strong>收集里程碑：</strong>每收集7张不重复卡片</li>
+                </ul>
+                <p>解锁成就后可以领取兑换点奖励！</p>
+            </div>
+
+            <div class="intro-section">
+                <h3>💰 兑换系统</h3>
+                <p>使用兑换点可以到指定地点兑换实物奖励：</p>
+                <ul>
+                    <li>完成成就后可领取兑换点</li>
+                    <li>每月只能兑换一次</li>
+                    <li>每次兑换消耗1个兑换点</li>
+                </ul>
+            </div>
+
+            <div class="intro-section">
+                <h3>📚 卡包管理</h3>
+                <p>在卡包页面可以查看所有收集的卡片，点击卡片可以查看详情并保存到本地（带水印）。</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <button class="btn" onclick="closeIntro()" style="padding: 10px 30px;">我知道了</button>
+            </div>
         </div>
     </div>
 
@@ -191,19 +486,42 @@
             const submitBtn = document.getElementById('submitBtn');
             const switchText = document.getElementById('switchText');
             const switchBtn = document.getElementById('switchBtn');
+            const usernameHelp = document.getElementById('usernameHelp');
+            const passwordHelp = document.getElementById('passwordHelp');
 
             if (isLoginMode) {
                 title.textContent = '登录';
                 submitBtn.textContent = '登录';
                 switchText.textContent = '还没有账号？';
                 switchBtn.textContent = '立即注册';
+                usernameHelp.style.display = 'none';
+                passwordHelp.style.display = 'none';
             } else {
                 title.textContent = '注册';
                 submitBtn.textContent = '注册';
                 switchText.textContent = '已有账号？';
                 switchBtn.textContent = '立即登录';
+                usernameHelp.style.display = 'block';
+                passwordHelp.style.display = 'block';
             }
         }
+
+        // 显示系统介绍
+        function showIntro() {
+            document.getElementById('introModal').classList.add('show');
+        }
+
+        // 关闭系统介绍
+        function closeIntro() {
+            document.getElementById('introModal').classList.remove('show');
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('introModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeIntro();
+            }
+        });
 
         // 表单提交
         document.getElementById('authForm').addEventListener('submit', async (e) => {
@@ -270,4 +588,5 @@
     </script>
 </body>
 </html>
+
 

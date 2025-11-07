@@ -18,6 +18,22 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             padding: 20px;
             padding-top: 80px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            z-index: 0;
+            pointer-events: none;
+            background-image: 
+                linear-gradient(to right, transparent 48%, rgba(255,255,255,0.03) 48%, rgba(255,255,255,0.03) 52%, transparent 52%),
+                linear-gradient(to bottom, transparent 48%, rgba(255,255,255,0.03) 48%, rgba(255,255,255,0.03) 52%, transparent 52%);
         }
 
         .header {
@@ -111,6 +127,8 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .stats {
@@ -172,28 +190,6 @@
             font-size: 14px;
             font-weight: 600;
             color: #333;
-            margin-bottom: 5px;
-        }
-
-        .card-rarity {
-            font-size: 12px;
-            color: #999;
-        }
-
-        .rarity-common {
-            color: #666;
-        }
-
-        .rarity-rare {
-            color: #4a90e2;
-        }
-
-        .rarity-epic {
-            color: #9b59b6;
-        }
-
-        .rarity-legendary {
-            color: #f39c12;
         }
 
         .loading {
@@ -307,11 +303,6 @@
             margin-bottom: 10px;
         }
 
-        .card-modal-rarity {
-            font-size: 16px;
-            margin-bottom: 15px;
-        }
-
         .card-modal-description {
             font-size: 14px;
             color: #666;
@@ -369,6 +360,7 @@
         <h1>📚 我的卡包</h1>
         <div class="nav-buttons">
             <a href="/index.html" class="nav-btn">抽卡</a>
+            <a href="/achievements.html" class="nav-btn">成就</a>
             <a href="/profile.html" class="nav-btn">资料</a>
             <a href="#" onclick="logout()" class="nav-btn">退出</a>
         </div>
@@ -393,7 +385,6 @@
             <button class="close-btn" onclick="closeCardModal()">×</button>
             <img id="modalCardImage" class="card-modal-image" src="" alt="卡片">
             <div class="card-modal-title" id="modalCardName">卡片名称</div>
-            <div class="card-modal-rarity" id="modalCardRarity">稀有度</div>
             <div class="card-modal-description" id="modalCardDescription">卡片描述</div>
             <div class="card-modal-actions">
                 <button class="btn btn-primary" onclick="downloadCard()">💾 保存到本地</button>
@@ -466,30 +457,16 @@
                 cardElement.className = 'card-item';
                 cardElement.onclick = () => showCardDetail(card.id);
                 
-                const rarityClass = `rarity-${card.rarity || 'common'}`;
-                
                 cardElement.innerHTML = `
                     <img src="${card.image_url}" alt="${card.name}" class="card-image" 
-                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'150\\' height=\\'200\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'150\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' dy=\\'.3em\\' fill=\\'%23999\\'%3E图片加载失败%3C/text%3E%3C/svg%3E'">
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\\'150\\' height=\\\'200\\'%3E%3Crect fill=\\\'%23ddd\\' width=\\\'150\\' height=\\\'200\\'/%3E%3Ctext x=\\\'50%25\\' y=\\\'50%25\\' text-anchor=\\\'middle\\' dy=\\\'.3em\\' fill=\\\'%23999\\'%3E图片加载失败%3C/text%3E%3C/svg%3E'">
                     <div class="card-info">
                         <div class="card-name">${card.name}</div>
-                        <div class="card-rarity ${rarityClass}">${getRarityText(card.rarity)}</div>
                     </div>
                 `;
                 
                 grid.appendChild(cardElement);
             });
-        }
-
-        // 获取稀有度文本
-        function getRarityText(rarity) {
-            const rarityMap = {
-                'common': '普通',
-                'rare': '稀有',
-                'epic': '史诗',
-                'legendary': '传说'
-            };
-            return rarityMap[rarity] || '普通';
         }
 
         // 显示卡片详情
@@ -512,8 +489,6 @@
 
                 document.getElementById('modalCardImage').src = card.image_url;
                 document.getElementById('modalCardName').textContent = card.name;
-                document.getElementById('modalCardRarity').textContent = 
-                    `稀有度: ${getRarityText(card.rarity)}`;
                 document.getElementById('modalCardDescription').textContent = 
                     card.description || '暂无描述';
 
@@ -560,7 +535,15 @@
                 window.URL.revokeObjectURL(url);
 
                 // 显示成功提示
-                alert('卡片已保存到本地！');
+                const successMsg = document.createElement('div');
+                successMsg.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #4caf50; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 10000; font-size: 14px;';
+                successMsg.textContent = '✓ 卡片已保存到本地！';
+                document.body.appendChild(successMsg);
+                setTimeout(() => {
+                    successMsg.style.opacity = '0';
+                    successMsg.style.transition = 'opacity 0.3s';
+                    setTimeout(() => document.body.removeChild(successMsg), 300);
+                }, 2000);
             } catch (error) {
                 showError(error.message || '下载失败，请稍后重试');
             }
@@ -597,4 +580,3 @@
     </script>
 </body>
 </html>
-

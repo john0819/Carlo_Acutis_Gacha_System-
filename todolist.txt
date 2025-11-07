@@ -22,3 +22,6 @@
 
 兑换点的位置 具体地点替换
 redemptionLocation
+
+todo：
+1. 卡洛照片替换

@@ -24,3 +24,124 @@ redemptionLocation
 
 todo：
 1. 卡洛照片替换
+
+1. 架构部署
+2. 租用云服务器
+    部署应用、数据库部署、域名和ssl
+3. 数据库改造 连接池
+4. 改造通过nginx
+
+
+路线图：
+阶段一：本地架构改造（先做，本地测试）
+1.1 代码层面优化（必须）
+    a.数据库连接池优化
+文件：database/db.go
+修改：SetMaxOpenConns(25) → SetMaxOpenConns(50-100)
+原因：支持300人并发
+    b.数据库配置环境变量化
+文件：database/db.go
+修改：硬编码的数据库连接信息改为从环境变量读取
+原因：本地和服务器配置不同
+    c.添加请求限流中间件
+新建：middleware/ratelimit.go
+功能：防止恶意请求压垮服务器
+原因：保护系统稳定性
+    d.图片服务优化（可选，但推荐）
+文件：main.go
+修改：图片服务交给Nginx，Go只处理API
+原因：减轻Go服务器压力
+
+1.2 配置文件创建
+    a.创建 .env.example 文件
+包含：数据库配置、端口、JWT密钥等
+用途：配置模板
+    b.创建 config.go 或使用环境变量
+统一管理配置
+支持本地/服务器不同配置
+
+1.3 本地测试
+    本地测试优化后的代码
+    压力测试（模拟300并发）
+    确保功能正常
+
+阶段二：服务器准备（与阶段一并行）
+2.1 购买云服务器
+[ ] 选择云服务商（阿里云/腾讯云/华为云）
+[ ] 选择配置：2核4G内存，40GB硬盘
+[ ] 选择操作系统：Ubuntu 22.04 LTS
+[ ] 购买并获取：公网IP、root密码/SSH密钥
+2.2 服务器基础环境
+[ ] SSH连接服务器
+[ ] 更新系统：apt update && apt upgrade -y
+[ ] 安装基础工具：git, curl, wget
+[ ] 安装Go 1.19+：wget https://go.dev/dl/go1.21.x.linux-amd64.tar.gz
+[ ] 安装Docker和Docker Compose
+[ ] 安装Nginx：apt install nginx -y
+[ ] 配置防火墙：开放80、443、22端口
+2.3 域名和SSL（可选但推荐）
+[ ] 购买域名（如：example.com）
+[ ] 域名解析到服务器IP
+[ ] 安装Certbot：apt install certbot python3-certbot-nginx -y
+[ ] 配置SSL证书：certbot --nginx -d example.com
+
+
+阶段三：部署文件准备（本地完成）
+3.1 创建部署脚本
+[ ] 创建 deploy.sh（部署脚本）
+功能：上传代码、编译、重启服务
+[ ] 创建 nginx.conf（Nginx配置）
+功能：反向代理、静态文件服务、SSL配置
+[ ] 创建 h5project.service（systemd服务文件）
+功能：让Go应用作为系统服务运行，自动重启
+[ ] 创建 docker-compose.prod.yml（生产环境Docker配置）
+功能：生产环境的数据库配置
+3.2 创建部署文档
+[ ] 创建 DEPLOY.md（部署文档）
+包含：详细部署步骤、常见问题
+
+阶段四：服务器部署（在服务器上执行）
+4.1 代码部署
+[ ] 上传代码到服务器
+方法1：使用git（推荐）
+方法2：使用scp/rsync
+方法3：使用FTP
+[ ] 在服务器上创建项目目录
+例如：/opt/h5project 或 /home/ubuntu/h5project
+4.2 环境配置
+[ ] 创建 .env 文件（从.env.example复制）
+[ ] 配置数据库连接信息
+[ ] 配置JWT密钥
+[ ] 配置端口等
+4.3 数据库部署
+[ ] 启动PostgreSQL（使用Docker Compose）
+[ ] 初始化数据库：./migrate_db.sh
+[ ] 导入卡片数据：./update_cards_safe.sh
+4.4 应用部署
+[ ] 编译Go程序：go build -o h5project main.go
+[ ] 配置systemd服务：cp h5project.service /etc/systemd/system/
+[ ] 启动服务：systemctl start h5project
+[ ] 设置开机自启：systemctl enable h5project
+4.5 Nginx配置
+[ ] 复制Nginx配置：cp nginx.conf /etc/nginx/sites-available/h5project
+[ ] 创建软链接：ln -s /etc/nginx/sites-available/h5project /etc/nginx/sites-enabled/
+[ ] 测试配置：nginx -t
+[ ] 重启Nginx：systemctl restart nginx
+4.6 测试
+[ ] 测试API：curl http://localhost:8080/api/daily-quote
+[ ] 测试网页：浏览器访问 http://你的域名/login.html
+[ ] 测试扫码：手机扫码访问
+
+阶段五：监控和维护（部署后）
+5.1 监控设置
+[ ] 配置日志轮转（logrotate）
+[ ] 设置日志查看：journalctl -u h5project -f
+[ ] 配置服务器监控（可选：Prometheus + Grafana）
+5.2 备份策略
+[ ] 数据库自动备份脚本
+[ ] 图片文件备份
+[ ] 定期测试恢复
+5.3 性能优化（可选）
+[ ] 添加Redis缓存（如果访问量大）
+[ ] 配置CDN加速图片（如果图片多）
+[ ] 数据库查询优化

@@ -16,6 +16,9 @@
 
 docker-compose stop
 
+性能测试：
+go run test/perftest.go
+
 优化：
 
 
@@ -24,6 +27,8 @@ redemptionLocation
 
 todo：
 1. 卡洛照片替换
+2. 定位增加
+3. 成就和兑换界面优化
 
 1. 架构部署
 2. 租用云服务器
@@ -47,7 +52,7 @@ todo：
 新建：middleware/ratelimit.go
 功能：防止恶意请求压垮服务器
 原因：保护系统稳定性
-    d.图片服务优化（可选，但推荐）
+    d.图片服务优化（可选，但推荐）❌
 文件：main.go
 修改：图片服务交给Nginx，Go只处理API
 原因：减轻Go服务器压力

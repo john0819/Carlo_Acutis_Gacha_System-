@@ -6,22 +6,19 @@ import (
 	"log"
 	"time"
 
+	"h5project/config"
+
 	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "h5user"
-	password = "h5pass123"
-	dbname   = "h5project"
-)
-
 func InitDB() error {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+	cfg := config.GetConfig()
+
+	// 构建数据库连接字符串
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBSSLMode)
 
 	var err error
 	DB, err = sql.Open("postgres", psqlInfo)
@@ -34,12 +31,13 @@ func InitDB() error {
 		return fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	// 设置连接池参数
-	DB.SetMaxOpenConns(25)
-	DB.SetMaxIdleConns(5)
-	DB.SetConnMaxLifetime(5 * time.Minute)
+	// 设置连接池参数（使用配置中的值）
+	DB.SetMaxOpenConns(cfg.DBMaxOpenConns)
+	DB.SetMaxIdleConns(cfg.DBMaxIdleConns)
+	DB.SetConnMaxLifetime(time.Duration(cfg.DBConnMaxLifetime) * time.Minute)
 
-	log.Println("✅ 数据库连接成功")
+	log.Printf("✅ 数据库连接成功 (连接池: MaxOpen=%d, MaxIdle=%d, MaxLifetime=%d分钟)",
+		cfg.DBMaxOpenConns, cfg.DBMaxIdleConns, cfg.DBConnMaxLifetime)
 	return nil
 }
 

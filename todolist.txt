@@ -25,6 +25,17 @@ go run test/perftest.go
 兑换点的位置 具体地点替换
 redemptionLocation
 
+本地测试部署：./deploy/test_local.sh
+服务器部署：
+./deploy/deploy.sh
+需要修改: nginx.conf: server_name和JWT_SECRET
+
+生成JWT_SECRET：openssl rand -base64 32
+    token鉴权相关的
+
+生成二维码：http://你的服务器IP/qrcode.html
+    替换服务器的ip
+
 todo：
 1. 卡洛照片替换
 2. 定位增加

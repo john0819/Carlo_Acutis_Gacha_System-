@@ -83,7 +83,16 @@ if command -v docker &> /dev/null; then
     cd $PROJECT_DIR
     if ! docker ps | grep -q h5project_db; then
         echo "启动数据库..."
-        docker-compose -f docker-compose.prod.yml up -d
+        # 兼容新旧版本的docker-compose命令
+        if command -v docker-compose &> /dev/null; then
+            docker-compose -f docker-compose.prod.yml up -d
+        elif docker compose version &> /dev/null; then
+            docker compose -f docker-compose.prod.yml up -d
+        else
+            echo "❌ 错误: 未找到docker-compose或docker compose命令"
+            echo "   请安装docker-compose或使用新版本Docker"
+            exit 1
+        fi
         sleep 5
     fi
     echo "✅ 数据库运行中"

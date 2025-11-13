@@ -1,12 +1,40 @@
 # 服务器部署步骤
 
-## 完整操作流程
+## ⚠️ 重要提示：关于部署目录
+
+**如果 `/root` 目录无法通过文件管理器上传文件，请使用新目录部署方案：**
+
+👉 **查看详细指南**: [DEPLOY_TO_NEW_DIR.md](./DEPLOY_TO_NEW_DIR.md)
+
+**快速方案（推荐用于文件上传）：**
+```bash
+# 部署到 /home/admin/h5project（可通过文件管理器上传）
+cd /home/admin
+git clone https://github.com/john0819/Carlo_Acutis_Gacha_System-.git h5project
+cd h5project
+./scripts/deploy_to_new_dir.sh /home/admin/h5project
+```
+
+---
+
+## 完整操作流程（默认 /opt/h5project）
 
 ### 1. 克隆代码
+
+**方案A：使用标准目录 /opt/h5project**
 ```bash
-cd ~
+cd /tmp
 git clone https://github.com/john0819/Carlo_Acutis_Gacha_System-.git
-cd Carlo_Acutis_Gacha_System-
+sudo mv Carlo_Acutis_Gacha_System- /opt/h5project
+cd /opt/h5project
+```
+
+**方案B：使用用户目录（推荐用于文件上传）**
+```bash
+cd /home/admin
+git clone https://github.com/john0819/Carlo_Acutis_Gacha_System-.git h5project
+cd h5project
+# 然后运行: ./scripts/deploy_to_new_dir.sh /home/admin/h5project
 ```
 
 ### 2. 安装PostgreSQL客户端（如果还没安装）

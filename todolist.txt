@@ -35,6 +35,8 @@ redemptionLocation
 
 生成二维码：http://你的服务器IP/qrcode.html
     替换服务器的ip
+服务端ip：47.111.226.140
+
 
 todo：
 1. 卡洛照片替换

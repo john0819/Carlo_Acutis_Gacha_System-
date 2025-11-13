@@ -1,69 +1,61 @@
-# H5随机图片展示项目
+# H5抽卡系统项目
 
-通过扫描二维码访问H5页面，随机展示图片集中的图片。
+一个基于Go开发的H5抽卡系统，支持用户注册、登录、每日抽卡等功能。
 
 ## 功能特点
 
 - 📱 响应式设计，适配手机和桌面端
-- 🎲 每次访问随机展示不同图片
+- 🎲 每日抽卡系统，随机获得卡片
+- 👤 用户注册登录系统
 - 🎨 现代化的UI设计
-- 🚀 轻量级Go服务器
+- 🚀 高性能Go服务器
+- 🔐 JWT认证
+- 📊 PostgreSQL数据库
 
-## 快速开始
+## 📚 快速开始
 
-### 1. 准备图片
+**👉 详细启动指南请查看：[QUICK_START.md](./QUICK_START.md)**
 
-将你的图片放入 `images/` 目录，命名为 `image1.jpg`, `image2.jpg`, `image3.jpg` 等。
-
-或者修改 `images/list.json` 文件，添加你的图片路径：
-
-```json
-{
-  "images": [
-    "/images/your-image1.jpg",
-    "/images/your-image2.jpg",
-    "/images/your-image3.jpg"
-  ]
-}
-```
-
-### 2. 运行服务器
+### 本地开发（快速）
 
 ```bash
-go run main.go
+# 1. 启动数据库
+./start_db.sh
+
+# 2. 启动开发服务器
+./dev.sh
 ```
 
-服务器将在 `http://localhost:8080` 启动。
+访问：http://localhost:8080
 
-### 3. 生成二维码
+### 本地 + 公网访问 + 二维码（一键启动）⭐推荐
 
-#### 方法一：使用在线工具
-1. 访问 https://cli.im/ 或 https://www.qrcode-monkey.com/
-2. 输入你的地址：`http://your-ip:8080/index.html`
-   - 如果手机和电脑在同一网络，使用电脑的局域网IP（如：`http://192.168.1.100:8080/index.html`）
-   - 如果需要在公网访问，需要使用内网穿透工具（如ngrok、frp等）
-
-#### 方法二：使用命令行工具（需要安装qrencode）
 ```bash
-# macOS
-brew install qrencode
-
-# 生成二维码
-qrencode -o qrcode.png "http://your-ip:8080/index.html"
+# 一键启动：数据库 + 服务器 + 内网穿透 + 自动打开二维码页面
+./start_with_tunnel.sh
 ```
 
-#### 方法三：使用Python脚本（需要安装qrcode库）
+### 本地 + 公网访问（手动分步）
+
 ```bash
-pip install qrcode[pil]
-python generate_qrcode.py
+# 终端1：启动服务
+./start_db.sh && ./dev.sh
+
+# 终端2：启动内网穿透
+./start_ngrok.sh  # 或 ./start_cloudflare.sh
+
+# 然后访问: 公网地址/qrcode.html 生成二维码
 ```
 
-### 4. 测试
+### 服务器部署
 
-1. 用手机扫描生成的二维码
-2. 手机浏览器会自动打开H5页面
-3. 页面会随机显示一张图片
-4. 点击"换一张"按钮可以切换图片
+```bash
+# 快速测试模式
+./scripts/quick_start.sh
+
+# 完整部署（生产环境）
+./deploy/deploy.sh
+```
 
 ## 项目结构
 
@@ -72,50 +64,59 @@ h5Project/
 ├── main.go              # Go服务器主文件
 ├── go.mod              # Go模块文件
 ├── static/             # 静态文件目录
-│   └── index.html      # H5页面
+│   ├── *.html          # H5页面
+│   └── *.json          # 配置文件
 ├── images/             # 图片目录
-│   ├── list.json       # 图片列表配置
-│   └── image*.jpg      # 图片文件
-└── README.md           # 说明文档
+│   └── card*.png       # 卡片图片
+├── handlers/           # 请求处理器
+├── models/             # 数据模型
+├── database/           # 数据库相关
+├── auth/               # 认证相关
+├── config/             # 配置相关
+├── deploy/             # 部署相关
+├── scripts/            # 脚本文件
+└── QUICK_START.md      # 快速启动指南
 ```
 
-## 部署到公网
+## 主要脚本说明
 
-### 使用ngrok（推荐用于测试）
+### 本地开发脚本
+- `start_db.sh` - 启动数据库
+- `dev.sh` - 开发模式启动（显示日志）
+- `stop.sh` - 停止所有服务
+- `start_with_tunnel.sh` - **一键启动（数据库+服务器+内网穿透+二维码）** ⭐推荐
+- `start_ngrok.sh` - ngrok内网穿透（单独使用）
+- `start_cloudflare.sh` - Cloudflare内网穿透（单独使用）
 
-1. 下载ngrok：https://ngrok.com/
-2. 注册并获取authtoken
-3. 运行：
-```bash
-ngrok http 8080
-```
-4. 使用ngrok提供的公网地址生成二维码
+### 服务器部署脚本
+- `scripts/quick_start.sh` - 快速启动（测试模式）
+- `scripts/start_db_server.sh` - 启动数据库
+- `scripts/init_server.sh` - 初始化服务器
+- `scripts/upload_images.sh` - 上传图片到服务器
+- `scripts/setup_ssh_key.sh` - 配置SSH密钥
+- `deploy/deploy.sh` - 完整部署（生产环境）
 
-### 使用frp（推荐用于生产环境）
+## 文档
 
-配置frp客户端和服务器，将本地8080端口映射到公网。
+- **[QUICK_START.md](./QUICK_START.md)** - 详细的快速启动指南（本地和服务器）
+- **README.md** - 项目说明（本文件）
+
+## 技术栈
+
+- **后端**: Go 1.19+
+- **数据库**: PostgreSQL 15
+- **容器**: Docker & Docker Compose
+- **认证**: JWT
+- **前端**: HTML/CSS/JavaScript
 
 ## 注意事项
 
-- 确保防火墙允许8080端口访问
-- 如果使用局域网IP，确保手机和电脑在同一网络
-- 图片文件建议使用jpg或png格式
-- 图片大小建议控制在2MB以内，以确保加载速度
+- 确保已安装 Docker（用于运行数据库）
+- 确保已安装 Go 1.19+
+- 服务器部署需要安装 Docker 和 Go
+- 图片文件建议使用png格式，命名规范：card001.png, card002.png...
 
-## 自定义配置
+## 获取帮助
 
-### 修改端口
-
-编辑 `main.go`，修改 `port` 变量：
-```go
-port := ":8080"  // 改为你想要的端口
-```
-
-### 修改图片路径
-
-编辑 `images/list.json`，添加或修改图片路径。
-
-### 修改页面样式
-
-编辑 `static/index.html`，修改CSS样式部分。
+遇到问题？查看 [QUICK_START.md](./QUICK_START.md) 中的"常见问题"部分。
 

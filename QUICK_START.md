@@ -22,6 +22,15 @@
 
 这会启动PostgreSQL数据库容器。
 
+#### 1.5. 初始化数据库和导入图片（首次运行必须）
+
+```bash
+# 导入图片到数据库（将images目录下的card*.png导入到数据库）
+./scripts/init_local.sh
+```
+
+**重要：** 首次运行或添加新图片后，必须运行此脚本将图片导入数据库，否则抽卡时看不到图片。
+
 #### 2. 启动开发服务器
 
 **方式A：开发模式（推荐，显示实时日志）**
@@ -184,7 +193,16 @@ scp -r . admin@服务器IP:/home/admin/h5project/
 ./scripts/upload_images.sh 服务器IP 用户名
 ```
 
-#### 4. 快速启动服务
+#### 4. 初始化数据库和导入图片（首次运行必须）
+
+```bash
+# 导入图片到数据库（将images目录下的card*.png导入到数据库）
+./scripts/init_server.sh
+```
+
+**重要：** 首次运行或添加新图片后，必须运行此脚本将图片导入数据库，否则抽卡时看不到图片。
+
+#### 5. 快速启动服务
 
 ```bash
 # 在服务器上运行
@@ -199,15 +217,22 @@ cd /home/admin/h5project  # 或你的项目目录
 - ✅ 编译Go程序
 - ✅ 启动服务（端口8080）
 
-#### 5. 测试访问
+#### 6. 测试访问
 
 ```bash
 # 在服务器上测试
 curl http://localhost:8080/health
 
+# 测试图片访问
+curl -I http://localhost:8080/images/card001.png
+
 # 从外部访问（需要开放防火墙端口）
 # http://服务器IP:8080
 ```
+
+**如果图片不显示：**
+- 运行 `./scripts/check_images.sh` 检查配置
+- 确保已运行 `./scripts/init_server.sh` 导入图片
 
 ---
 
@@ -309,6 +334,52 @@ sudo systemctl restart h5project
 ---
 
 ## ❓ 常见问题
+
+### 图片不显示
+
+**问题：** 抽卡时看不到图片，或者图片加载失败
+
+**排查步骤：**
+
+1. **检查图片是否已导入数据库**
+   ```bash
+   ./scripts/check_images.sh
+   ```
+
+2. **如果数据库中没有卡片数据，运行初始化脚本**
+   ```bash
+   # 本地开发
+   ./scripts/init_local.sh
+   
+   # 服务器
+   ./scripts/init_server.sh
+   ```
+
+3. **检查图片文件是否存在**
+   ```bash
+   ls -la images/card*.png
+   ```
+
+4. **检查图片路径格式**
+   - 数据库中的 `image_url` 应该是：`/images/card001.png`
+   - 前端访问路径：`http://localhost:8080/images/card001.png`
+
+5. **检查浏览器控制台**
+   - 按 F12 打开开发者工具
+   - 查看 Console 和 Network 标签
+   - 检查图片请求是否返回 404 或其他错误
+
+6. **测试图片直接访问**
+   ```bash
+   # 在浏览器中直接访问
+   http://localhost:8080/images/card001.png
+   ```
+
+**常见原因：**
+- ❌ 数据库中没有卡片数据（最常见）
+- ❌ 图片文件不存在
+- ❌ 图片路径格式错误
+- ❌ 服务器未正确配置静态文件服务
 
 ### 数据库连接失败
 

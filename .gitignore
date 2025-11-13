@@ -50,3 +50,5 @@ vendor/
 
 # image
 images/
+# 原始图片目录（处理后的图片在images目录）
+carlo_img/

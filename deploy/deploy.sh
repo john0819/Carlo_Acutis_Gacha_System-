@@ -40,13 +40,17 @@ echo ""
 echo "📋 步骤3: 复制文件..."
 sudo cp h5project $PROJECT_DIR/
 sudo cp -r static/* $PROJECT_DIR/static/
-sudo cp -r images/* $PROJECT_DIR/images/
+sudo cp -r images/* $PROJECT_DIR/images/ 2>/dev/null || true
 sudo cp docker-compose.yml $PROJECT_DIR/
+sudo cp docker-compose.prod.yml $PROJECT_DIR/
 sudo cp init.sql $PROJECT_DIR/
 sudo cp migrate_db.sh $PROJECT_DIR/
 sudo cp update_cards_safe.sh $PROJECT_DIR/
+sudo mkdir -p $PROJECT_DIR/scripts
+sudo cp -r scripts/* $PROJECT_DIR/scripts/ 2>/dev/null || true
 sudo chmod +x $PROJECT_DIR/h5project
 sudo chmod +x $PROJECT_DIR/*.sh
+sudo chmod +x $PROJECT_DIR/scripts/*.sh 2>/dev/null || true
 echo "✅ 文件复制完成"
 
 # 4. 配置systemd服务
@@ -79,12 +83,23 @@ if command -v docker &> /dev/null; then
     cd $PROJECT_DIR
     if ! docker ps | grep -q h5project_db; then
         echo "启动数据库..."
-        docker-compose up -d
+        docker-compose -f docker-compose.prod.yml up -d
         sleep 5
     fi
     echo "✅ 数据库运行中"
 else
     echo "⚠️  未检测到Docker，请手动启动数据库"
+fi
+
+# 6.5 初始化数据库和导入图片
+echo ""
+echo "📊 步骤6.5: 初始化数据库..."
+cd $PROJECT_DIR
+if [ -f "scripts/init_server.sh" ]; then
+    chmod +x scripts/init_server.sh
+    ./scripts/init_server.sh
+else
+    echo "⚠️  未找到初始化脚本，请手动运行: ./scripts/init_server.sh"
 fi
 
 # 7. 启动服务

@@ -20,7 +20,7 @@ cd h5project
 ### 2. 启动数据库
 ```bash
 # 使用生产环境配置启动数据库
-docker-compose -f deploy/docker-compose.prod.yml up -d
+docker compose -f deploy/docker-compose.prod.yml up -d
 
 # 等待数据库启动（约5秒）
 sleep 5

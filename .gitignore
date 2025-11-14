@@ -10,9 +10,9 @@
 go.work
 
 # 图片文件（如果不想提交可以取消注释）
-# images/*.jpg
-# images/*.png
-# images/*.gif
+images/*.jpg
+images/*.png
+images/*.gif
 
 # 二维码图片
 qrcode.png

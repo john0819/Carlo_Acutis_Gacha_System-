@@ -41,11 +41,11 @@ echo "📋 步骤3: 复制文件..."
 sudo cp h5project $PROJECT_DIR/
 sudo cp -r static/* $PROJECT_DIR/static/
 sudo cp -r images/* $PROJECT_DIR/images/ 2>/dev/null || true
-sudo cp docker-compose.yml $PROJECT_DIR/
-sudo cp docker-compose.prod.yml $PROJECT_DIR/
+sudo cp docker-compose.yml $PROJECT_DIR/ 2>/dev/null || true
+sudo cp deploy/docker-compose.prod.yml $PROJECT_DIR/ 2>/dev/null || true
 sudo cp init.sql $PROJECT_DIR/
-sudo cp migrate_db.sh $PROJECT_DIR/
-sudo cp update_cards_safe.sh $PROJECT_DIR/
+sudo cp migrate_db.sh $PROJECT_DIR/ 2>/dev/null || true
+sudo cp update_cards_safe.sh $PROJECT_DIR/ 2>/dev/null || true
 sudo mkdir -p $PROJECT_DIR/scripts
 sudo cp -r scripts/* $PROJECT_DIR/scripts/ 2>/dev/null || true
 sudo chmod +x $PROJECT_DIR/h5project

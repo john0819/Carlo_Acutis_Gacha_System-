@@ -44,13 +44,13 @@ sudo cp -r images/* $PROJECT_DIR/images/ 2>/dev/null || true
 sudo cp docker-compose.yml $PROJECT_DIR/ 2>/dev/null || true
 sudo cp deploy/docker-compose.prod.yml $PROJECT_DIR/ 2>/dev/null || true
 sudo cp init.sql $PROJECT_DIR/
-sudo cp migrate_db.sh $PROJECT_DIR/ 2>/dev/null || true
-sudo cp update_cards_safe.sh $PROJECT_DIR/ 2>/dev/null || true
+[ -f migrate_db.sh ] && sudo cp migrate_db.sh $PROJECT_DIR/ || true
+[ -f update_cards_safe.sh ] && sudo cp update_cards_safe.sh $PROJECT_DIR/ || true
 sudo mkdir -p $PROJECT_DIR/scripts
 sudo cp -r scripts/* $PROJECT_DIR/scripts/ 2>/dev/null || true
 sudo chmod +x $PROJECT_DIR/h5project
-sudo chmod +x $PROJECT_DIR/*.sh
-sudo chmod +x $PROJECT_DIR/scripts/*.sh 2>/dev/null || true
+[ -f $PROJECT_DIR/*.sh ] && sudo chmod +x $PROJECT_DIR/*.sh 2>/dev/null || true
+[ -d $PROJECT_DIR/scripts ] && sudo chmod +x $PROJECT_DIR/scripts/*.sh 2>/dev/null || true
 echo "✅ 文件复制完成"
 
 # 4. 配置systemd服务

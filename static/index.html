@@ -973,8 +973,33 @@
             const message = document.getElementById('cardMessage');
 
             title.textContent = data.card.name || '神秘卡片';
-            image.src = data.card.image_url;
             message.textContent = data.message;
+
+            // 优化图片加载：先显示加载状态
+            image.style.opacity = '0.5';
+            image.onload = function() {
+                this.style.opacity = '1';
+                this.style.transition = 'opacity 0.3s';
+            };
+            image.onerror = function() {
+                this.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'400\'%3E%3Crect fill=\'%23ddd\' width=\'300\' height=\'400\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\' font-size=\'18\'%3E图片加载失败%3C/text%3E%3C/svg%3E';
+                this.style.opacity = '1';
+            };
+            
+            // 设置超时处理
+            const timeoutId = setTimeout(() => {
+                if (image.complete === false || image.naturalWidth === 0) {
+                    image.onerror();
+                }
+            }, 10000); // 10秒超时
+            
+            image.onload = function() {
+                clearTimeout(timeoutId);
+                this.style.opacity = '1';
+                this.style.transition = 'opacity 0.3s';
+            };
+            
+            image.src = data.card.image_url;
 
             if (data.is_new_card) {
                 badge.style.display = 'inline-block';

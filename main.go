@@ -36,6 +36,10 @@ func main() {
 		return rateLimiter.Limit(auth.JWTMiddleware(handler)).ServeHTTP
 	}
 
+	// 健康检查端点（不需要认证和限流）
+	http.HandleFunc("/health", handlers.HealthCheck)
+	http.HandleFunc("/api/health", handlers.HealthCheck)
+
 	// API路由（使用明确路径，避免被静态文件覆盖）
 	// 公开接口（限流保护）
 	http.HandleFunc("/api/register", rateLimiter.Limit(http.HandlerFunc(handlers.Register)).ServeHTTP)

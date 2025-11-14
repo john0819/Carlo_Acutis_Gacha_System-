@@ -434,7 +434,49 @@
             }
         }
 
-        // 渲染卡片网格
+        // 优化后的图片加载函数（带超时和重试）
+        function loadImageWithRetry(imgElement, imageUrl, maxRetries = 2, timeout = 10000) {
+            let retryCount = 0;
+            
+            const tryLoad = () => {
+                return new Promise((resolve, reject) => {
+                    const timeoutId = setTimeout(() => {
+                        reject(new Error('加载超时'));
+                    }, timeout);
+                    
+                    imgElement.onload = () => {
+                        clearTimeout(timeoutId);
+                        resolve();
+                    };
+                    
+                    imgElement.onerror = () => {
+                        clearTimeout(timeoutId);
+                        reject(new Error('加载失败'));
+                    };
+                    
+                    imgElement.src = imageUrl;
+                });
+            };
+            
+            const attemptLoad = async () => {
+                try {
+                    await tryLoad();
+                } catch (error) {
+                    retryCount++;
+                    if (retryCount <= maxRetries) {
+                        // 等待一段时间后重试
+                        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+                        return attemptLoad();
+                    } else {
+                        throw error;
+                    }
+                }
+            };
+            
+            return attemptLoad();
+        }
+
+        // 渲染卡片网格（优化版）
         function renderCards(cards) {
             const container = document.getElementById('cardsContainer');
             
@@ -452,18 +494,46 @@
             container.innerHTML = '<div class="cards-grid"></div>';
             const grid = container.querySelector('.cards-grid');
 
-            cards.forEach(card => {
+            cards.forEach((card, index) => {
                 const cardElement = document.createElement('div');
                 cardElement.className = 'card-item';
                 cardElement.onclick = () => showCardDetail(card.id);
                 
+                // 创建图片占位符
+                const img = document.createElement('img');
+                img.alt = card.name;
+                img.className = 'card-image';
+                img.loading = 'lazy'; // 懒加载
+                
+                // 显示加载状态
+                img.style.opacity = '0.5';
+                img.style.transition = 'opacity 0.3s';
+                
+                // 错误处理
+                img.onerror = function() {
+                    this.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'150\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'150\' height=\'200\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\'%3E图片加载失败%3C/text%3E%3C/svg%3E';
+                    this.style.opacity = '1';
+                };
+                
+                // 加载成功
+                img.onload = function() {
+                    this.style.opacity = '1';
+                };
+                
+                // 延迟加载图片（分批加载，避免同时加载太多）
+                setTimeout(() => {
+                    loadImageWithRetry(img, card.image_url).catch(() => {
+                        // 如果所有重试都失败，使用错误占位符
+                        img.onerror();
+                    });
+                }, index * 50); // 每张图片延迟50ms加载
+                
                 cardElement.innerHTML = `
-                    <img src="${card.image_url}" alt="${card.name}" class="card-image" 
-                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\\'150\\' height=\\\'200\\'%3E%3Crect fill=\\\'%23ddd\\' width=\\\'150\\' height=\\\'200\\'/%3E%3Ctext x=\\\'50%25\\' y=\\\'50%25\\' text-anchor=\\\'middle\\' dy=\\\'.3em\\' fill=\\\'%23999\\'%3E图片加载失败%3C/text%3E%3C/svg%3E'">
                     <div class="card-info">
                         <div class="card-name">${card.name}</div>
                     </div>
                 `;
+                cardElement.insertBefore(img, cardElement.firstChild);
                 
                 grid.appendChild(cardElement);
             });

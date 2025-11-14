@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -14,6 +15,10 @@ import (
 )
 
 func sendError(w http.ResponseWriter, message string, statusCode int) {
+	// 记录错误日志（只记录服务器错误，不记录客户端错误）
+	if statusCode >= 500 {
+		log.Printf("❌ [ERROR] HTTP %d: %s", statusCode, message)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(map[string]string{"error": message})

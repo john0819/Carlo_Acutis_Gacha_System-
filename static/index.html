@@ -3,12 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>抽卡WebApp - 主页</title>
+    <title>一步一步都有祝福</title>
     <style>
+        :root {
+            --primary-color: #1a237e; /* Deep Blue */
+            --accent-color: #ffd700;  /* Gold */
+            --text-color: #333;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -16,1275 +25,1211 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
             align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-color);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            padding: 20px;
-            padding-top: 100px;
+            padding-top: 70px;
             padding-bottom: 40px;
+            color: var(--text-color);
         }
 
-        /* 每日语录卡片 */
-        .daily-quote {
-            width: 90%;
-            max-width: 600px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 25px 30px;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-            position: relative;
-            text-align: center;
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        .daily-quote::before {
-            content: '';
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 30px;
-            height: 30px;
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 50%;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            background-image: 
-                linear-gradient(to right, transparent 48%, #f39c12 48%, #f39c12 52%, transparent 52%),
-                linear-gradient(to bottom, transparent 48%, #f39c12 48%, #f39c12 52%, transparent 52%);
-        }
-
-        .quote-icon {
-            font-size: 28px;
-            color: #667eea;
-            margin-bottom: 12px;
-        }
-
-        .quote-text {
-            font-size: 17px;
-            line-height: 1.9;
-            color: #333;
-            font-style: italic;
-            margin-bottom: 12px;
-            padding: 0 10px;
-        }
-
-        .quote-date {
-            font-size: 12px;
-            color: #999;
-            margin-top: 12px;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 600px;
-            text-align: center;
-            position: relative;
-            z-index: 1;
-        }
-
-        .daily-quote {
-            position: relative;
-            z-index: 1;
-        }
-
-        .image-wrapper {
-            width: 100%;
-            min-height: 300px;
-            border-radius: 20px;
-            overflow: visible;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            background: #fff;
-            padding: 15px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .image-wrapper::before {
-            content: '✨';
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            font-size: 24px;
-            z-index: 10;
-            animation: twinkle 2s ease-in-out infinite;
-        }
-
-        .image-wrapper::after {
-            content: '✨';
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 24px;
-            z-index: 10;
-            animation: twinkle 2s ease-in-out infinite 0.5s;
-        }
-
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.5; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.2); }
-        }
-
-        .image-wrapper img {
-            max-width: 100%;
-            max-height: 65vh;
-            width: auto;
-            height: auto;
-            object-fit: contain;
-            display: block;
-            border-radius: 10px;
-        }
-
-        .loading {
-            color: #fff;
-            font-size: 18px;
-            padding: 40px;
-        }
-
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
-
+        /* 顶部导航 */
         .nav {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            height: 60px;
+            padding: 0 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             z-index: 100;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
+            transition: all 0.3s ease;
         }
 
-        .nav-left {
+        .nav-brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-color);
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
             align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            max-width: calc(100% - 160px);
+            overflow: hidden;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-brand-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .nav-right {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
+            flex-shrink: 0;
         }
 
-        .info-btn-nav {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(102, 126, 234, 0.1);
-            border: 2px solid #667eea;
-            color: #667eea;
-            font-size: 18px;
+        .nav-icon-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
             cursor: pointer;
+            color: #555;
+            transition: transform 0.2s;
+            padding: 5px;
+            flex-shrink: 0;
+            min-width: 32px;
+        }
+
+        .nav-icon-btn:hover {
+            transform: scale(1.1);
+            color: var(--primary-color);
+        }
+
+        /* 每日语录卡片 */
+        .daily-quote-container {
+            width: 92%;
+            max-width: 600px;
+            margin: 20px auto;
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(26, 35, 126, 0.08);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        
+        .daily-quote-container::before {
+            content: '”';
+            position: absolute;
+            top: -20px;
+            right: 10px;
+            font-size: 120px;
+            color: rgba(255, 215, 0, 0.1);
+            font-family: serif;
+            pointer-events: none;
+        }
+
+        .quote-icon {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            opacity: 0.8;
+        }
+
+        .quote-text {
+            font-size: 19px;
+            line-height: 1.7;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        .quote-date {
+            font-size: 13px;
+            color: #666;
+            margin-top: 10px;
+            display: inline-block;
+            background: rgba(26, 35, 126, 0.05);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        /* 主功能网格 */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 92%;
+            max-width: 600px;
+            margin: 10px auto;
+            padding-bottom: 20px;
+        }
+
+        .grid-card {
+            background: white;
+            border-radius: 24px;
+            padding: 25px 15px;
             display: flex;
+                flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
             text-decoration: none;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            min-height: 170px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.5);
         }
 
-        .info-btn-nav:hover {
-            background: rgba(102, 126, 234, 0.2);
+        .grid-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(26, 35, 126, 0.15);
+        }
+        
+        /* 增加卡片光泽效果 */
+        .grid-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none;
+        }
+
+        /* 卡片特定样式 - 优化渐变色 */
+        .card-checkin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-collection {
+            background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%);
+        }
+
+        .card-achievements {
+            background: linear-gradient(135deg, #FF8008 0%, #FFC837 100%);
+        }
+
+        .card-exchange {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .grid-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+            transition: transform 0.3s;
+        }
+        
+        .grid-card:hover .grid-icon {
             transform: scale(1.1);
         }
 
-        .nav-btn {
-            background: rgba(255, 255, 255, 0.9);
-            color: #667eea;
-            padding: 10px 20px;
-            border-radius: 20px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            margin-left: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s;
-            display: inline-block;
-        }
-
-        .nav-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        /* 移动端响应式 */
-        @media (max-width: 768px) {
-            .nav {
-                padding: 10px 15px;
-            }
-
-            .nav-left, .nav-right {
-                gap: 5px;
-            }
-
-            .nav-btn {
-                padding: 8px 12px;
-                font-size: 12px;
-                margin-left: 0;
-            }
-
-            .info-btn-nav {
-                width: 28px;
-                height: 28px;
-                font-size: 16px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .nav {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .nav-left, .nav-right {
-                width: 100%;
-                justify-content: center;
-                margin-bottom: 5px;
-            }
-
-            .nav-btn {
-                margin-left: 0;
-                margin-bottom: 5px;
-                width: auto;
-                text-align: center;
-                min-width: 80px;
-            }
-        }
-
-        .draw-btn {
-            margin-top: 25px;
-            padding: 18px 45px;
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            color: white;
-            border: none;
-            border-radius: 35px;
+        .grid-title {
             font-size: 20px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 12px 35px rgba(243, 156, 18, 0.4);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 4px;
         }
 
-        .draw-btn::before {
-            content: '';
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 14px;
-            height: 14px;
-            background-image: 
-                linear-gradient(to right, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%),
-                linear-gradient(to bottom, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%);
+        .grid-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.9);
+            margin-top: 5px;
+            text-align: center;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
 
-        .draw-btn::after {
-            content: '';
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 14px;
-            height: 14px;
-            background-image: 
-                linear-gradient(to right, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%),
-                linear-gradient(to bottom, transparent 48%, rgba(255,255,255,0.9) 48%, rgba(255,255,255,0.9) 52%, transparent 52%);
-        }
-
-        .draw-btn:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(243, 156, 18, 0.5);
-        }
-
-        .draw-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .draw-btn.draw-animation {
-            animation: pulse 0.5s ease-in-out;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        .card-modal {
+        /* 弹窗通用样式 */
+        .modal {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 2000;
             justify-content: center;
             align-items: center;
+            backdrop-filter: blur(5px);
+            padding: 20px;
         }
 
-        .card-modal.show {
+        .modal.show {
             display: flex;
+            animation: fadeIn 0.3s ease-out;
         }
 
-        .card-content {
+        .modal-content {
             background: white;
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-            animation: cardAppear 0.5s ease-out;
+            width: 100%;
+            max-width: 480px;
             position: relative;
-        }
-
-        .card-content::before {
-            content: '✨';
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            font-size: 20px;
-        }
-
-        .card-content::after {
-            content: '✨';
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 20px;
-        }
-
-        @keyframes cardAppear {
-            from {
-                opacity: 0;
-                transform: scale(0.8) rotateY(180deg);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) rotateY(0deg);
-            }
-        }
-
-        .card-content img {
-            width: 100%;
-            max-height: 400px;
-            object-fit: contain;
-            border-radius: 15px;
-            margin: 20px 0;
-        }
-
-        .card-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .card-message {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        .new-card-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-
-        .close-btn {
-            padding: 10px 30px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .close-btn:hover {
-            background: #5568d3;
-        }
-
-        /* 成就通知弹窗 */
-        .achievement-notification {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 3000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .achievement-notification.show {
-            display: flex;
-        }
-
-        .achievement-content-notif {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-            color: white;
-            animation: achievementAppear 0.5s ease-out;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        @keyframes achievementAppear {
-            from {
-                opacity: 0;
-                transform: scale(0.8) rotateY(180deg);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) rotateY(0deg);
-            }
-        }
-
-        .achievement-icon-large {
-            font-size: 64px;
-            margin-bottom: 15px;
-        }
-
-        .achievement-title-notif {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .achievement-desc-notif {
-            font-size: 16px;
-            margin-bottom: 20px;
-            opacity: 0.9;
-        }
-
-        .achievement-reward-notif {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-
-        /* 系统介绍弹窗样式 */
-        .intro-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .intro-modal.show {
-            display: flex;
-        }
-
-        .intro-content {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 80vh;
+            max-height: 90vh;
             overflow-y: auto;
-            position: relative;
-            animation: modalAppear 0.3s ease-out;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
         }
 
-        .intro-content h2 {
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 24px;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        .intro-content .intro-section {
-            margin-bottom: 20px;
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
-        .intro-content .intro-section h3 {
-            color: #667eea;
-            font-size: 18px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .intro-content .intro-section p {
-            color: #666;
-            font-size: 14px;
-            line-height: 1.8;
-            margin-bottom: 8px;
-        }
-
-        .intro-content .intro-section ul {
-            color: #666;
-            font-size: 14px;
-            line-height: 1.8;
-            padding-left: 20px;
-            margin-top: 8px;
-        }
-
-        .intro-content .intro-section li {
-            margin-bottom: 5px;
-        }
-
-        .close-intro {
+        .close-modal-btn {
             position: absolute;
             top: 15px;
             right: 15px;
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: #f0f0f0;
             border: none;
             font-size: 20px;
+            color: #666;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #666;
+        }
+
+        /* 抽卡界面样式 (在弹窗内) */
+        .draw-wrapper {
+            text-align: center;
+        }
+
+        .card-preview-box {
+            width: 100%;
+            min-height: 300px;
+            background: #f8f9fa;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-preview-box img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 30px;
+            border: none;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
             transition: all 0.3s;
         }
 
-        .close-intro:hover {
-            background: #e0e0e0;
-            transform: rotate(90deg);
+        .btn-draw {
+            background: linear-gradient(135deg, #f39c12 0%, #d35400 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(243, 156, 18, 0.3);
         }
 
-        /* 倒计时容器样式 */
-        .countdown-container {
-            width: 100%;
-            max-width: 600px;
-            margin: 20px auto 0;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
+        .btn-draw:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(243, 156, 18, 0.4);
+        }
+
+        .btn-draw:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* 倒计时 */
+        .countdown-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: none;
             align-items: center;
-            gap: 15px;
-            animation: fadeIn 0.5s ease-out;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .countdown-icon {
-            font-size: 32px;
-            flex-shrink: 0;
+        .countdown-text {
+            font-family: monospace;
+            font-size: 20px;
+            color: var(--primary-color);
+            font-weight: bold;
         }
 
-        .countdown-content {
-            flex: 1;
-        }
-
-        .countdown-label {
-            font-size: 14px;
-            color: #999;
-            margin-bottom: 5px;
-        }
-
-        .countdown-time {
-            font-size: 24px;
-            font-weight: 600;
-            color: #667eea;
-            font-family: 'Courier New', monospace;
-            letter-spacing: 2px;
-        }
-
-        /* Toast提示样式 */
+        /* Toast */
         .toast {
             position: fixed;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.8);
             color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            z-index: 10000;
-            opacity: 0;
+            padding: 12px 24px;
+            border-radius: 50px;
+            z-index: 3000;
+                opacity: 0;
             transition: opacity 0.3s;
-            max-width: 90%;
-            text-align: center;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+
+        /* 新卡片结果展示 */
+        .new-card-badge {
+            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        /* 兑换商店样式 */
+        .exchange-item {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 2px solid #f0f0f0;
+            transition: all 0.3s;
+        }
+
+        .exchange-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .exchange-item.premium {
+            border-color: var(--accent-color);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(255, 215, 0, 0.02) 100%);
+        }
+
+        .exchange-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .exchange-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .exchange-badge {
+            background: var(--accent-color);
+            color: #333;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .exchange-badge.basic {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .exchange-desc {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .exchange-cost {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .exchange-cost-label {
+            color: #999;
             font-size: 14px;
         }
 
-        .toast.show {
-            opacity: 1;
+        .exchange-cost-value {
+            color: var(--accent-color);
+            font-size: 20px;
+            font-weight: 600;
         }
 
-        .toast.success {
-            background: rgba(76, 175, 80, 0.95);
+        .exchange-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        .toast.error {
-            background: rgba(244, 67, 54, 0.95);
+        .exchange-btn.basic {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #283593 100%);
+            color: white;
         }
 
-        .toast.info {
-            background: rgba(33, 150, 243, 0.95);
+        .exchange-btn.premium {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #ffc107 100%);
+            color: #333;
+        }
+
+        .exchange-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .exchange-btn:disabled {
+            background: #ccc;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .exchange-location {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .exchange-location strong {
+            color: var(--primary-color);
+        }
+
+        /* 响应式微调 */
+        @media (max-width: 480px) {
+            .nav {
+                padding: 0 10px;
+                height: 56px;
+            }
+            
+            .nav-brand {
+                font-size: 14px;
+                max-width: calc(100% - 160px);
+                gap: 4px;
+            }
+            
+            .nav-brand-text {
+                display: none; /* 在很小屏幕上隐藏文字，只显示图标 */
+            }
+            
+            .nav-right {
+                gap: 8px;
+            }
+            
+            .nav-icon-btn {
+                font-size: 18px;
+                padding: 4px;
+                min-width: 28px;
+            }
+            
+            body {
+                padding-top: 66px;
+            }
+            
+            .main-grid {
+                gap: 10px;
+            }
+            .grid-card {
+                min-height: 140px;
+            }
+            .grid-icon {
+                font-size: 36px;
+            }
+            .grid-title {
+                font-size: 16px;
+            }
+        }
+        
+        /* 中等屏幕优化 */
+        @media (max-width: 640px) and (min-width: 481px) {
+            .nav-brand {
+                font-size: 16px;
+                max-width: calc(100% - 180px);
+            }
+            
+            .nav-right {
+                gap: 12px;
+            }
+            
+            .nav-icon-btn {
+                font-size: 19px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- 顶部导航 -->
     <div class="nav">
-        <div class="nav-left">
-            <a href="/collection.html" class="nav-btn">我的卡包</a>
-            <a href="/achievements.html" class="nav-btn">成就</a>
-            <a href="/profile.html" class="nav-btn">个人资料</a>
+        <div class="nav-brand">
+            <span>✝️</span>
+            <span class="nav-brand-text">一步一步都有祝福</span>
         </div>
         <div class="nav-right">
-            <a href="#" onclick="showIntro(); return false;" class="info-btn-nav" title="了解系统">ℹ️</a>
-            <a href="#" onclick="showFeedbackModal(); return false;" class="nav-btn">反馈</a>
-            <a href="#" onclick="logout(); return false;" class="nav-btn">退出</a>
+            <button class="nav-icon-btn" onclick="showIntro()" title="介绍">ℹ️</button>
+            <button class="nav-icon-btn" onclick="showFeedbackModal()" title="反馈">📝</button>
+            <a href="/profile.html" class="nav-icon-btn" title="我的信息">👤</a>
+            <button class="nav-icon-btn" onclick="logout()" title="退出">🚪</button>
         </div>
     </div>
     
-    <!-- 每日语录 -->
-    <div class="daily-quote" id="dailyQuote">
-        <div class="quote-icon">💭</div>
+    <!-- 每日圣言 -->
+    <div class="daily-quote-container" id="dailyQuote">
+        <div class="quote-icon">❝</div>
         <div class="quote-text" id="quoteText">加载中...</div>
         <div class="quote-date" id="quoteDate"></div>
     </div>
 
-    <div class="container">
-        <div class="image-wrapper" id="imageWrapper">
-            <div class="loading">加载中...</div>
+    <!-- 主功能模块 (4格) -->
+    <div class="main-grid">
+        <!-- 模块1：打卡抽卡 -->
+        <div class="grid-card card-checkin" onclick="openDrawModal()">
+            <div class="grid-icon">📅</div>
+            <div class="grid-title">打卡抽卡</div>
+            <div class="grid-desc">每日灵修 抽取圣像</div>
         </div>
         
-        <button class="draw-btn" id="drawBtn" onclick="drawCard()">抽卡</button>
-        <div class="countdown-container" id="countdownContainer" style="display: none;">
-            <div class="countdown-icon">⏰</div>
-            <div class="countdown-content">
-                <div class="countdown-label">距离下次抽卡</div>
-                <div class="countdown-time" id="countdownTime">--:--:--</div>
+        <!-- 模块2：我的卡包 -->
+        <a href="/collection.html" class="grid-card card-collection">
+            <div class="grid-icon">🎴</div>
+            <div class="grid-title">我的卡包</div>
+            <div class="grid-desc">查看收藏 珍藏圣像</div>
+        </a>
+
+        <!-- 模块3：我的成就 -->
+        <a href="/achievements.html" class="grid-card card-achievements">
+            <div class="grid-icon">🏆</div>
+            <div class="grid-title">我的成就</div>
+            <div class="grid-desc">信仰之路 里程碑</div>
+        </a>
+
+        <!-- 模块4：兑换商店 -->
+        <div class="grid-card card-exchange" onclick="openExchangeModal()">
+            <div class="grid-icon">🎁</div>
+            <div class="grid-title">兑换商店</div>
+            <div class="grid-desc">积分兑换 实体好礼</div>
             </div>
         </div>
+
+    <!-- 抽卡弹窗 (原抽卡功能整合至此) -->
+    <div class="modal" id="drawModal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="closeDrawModal()">×</button>
+            <h3 style="text-align: center; margin-bottom: 20px;">每日打卡</h3>
+            
+            <div class="draw-wrapper">
+                <div class="card-preview-box" id="imageWrapper">
+                    <div style="color: #999;">加载图片中...</div>
     </div>
 
-    <!-- 抽卡结果弹窗 -->
-    <div class="card-modal" id="cardModal">
-        <div class="card-content">
-            <div id="cardBadge" class="new-card-badge" style="display: none;">✨ 新卡片！</div>
-            <div class="card-title" id="cardTitle">卡片名称</div>
-            <img id="cardImage" src="" alt="卡片">
-            <div class="card-message" id="cardMessage">恭喜你抽到了卡片！</div>
-            <button class="close-btn" onclick="closeCardModal()">确定</button>
+                <button class="action-btn btn-draw" id="drawBtn" onclick="drawCard()">
+                    开始抽卡
+                </button>
+
+                <div class="countdown-box" id="countdownContainer">
+                    <span>距离下次打卡：</span>
+                    <div class="countdown-text" id="countdownTime">--:--:--</div>
+        </div>
+    </div>
         </div>
     </div>
 
-    <!-- 成就通知弹窗 -->
-    <div class="achievement-notification" id="achievementNotification">
-        <div class="achievement-content-notif">
-            <div class="achievement-icon-large">🏆</div>
-            <div class="achievement-title-notif" id="achievementTitle">解锁成就！</div>
-            <div class="achievement-desc-notif" id="achievementDesc">成就描述</div>
-            <div class="achievement-reward-notif" id="achievementReward">奖励: 1 兑换点</div>
-            <button class="close-btn" onclick="closeAchievementNotification()" style="background: rgba(255,255,255,0.2); color: white;">确定</button>
+    <!-- 兑换商店弹窗 -->
+    <div class="modal" id="exchangeModal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="closeExchangeModal()">×</button>
+            <h3 style="text-align: center; margin-bottom: 20px; color: var(--primary-color);">🎁 兑换商店</h3>
+            
+            <!-- 兑换提示信息（移到上方） -->
+            <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 2px solid var(--accent-color);">
+                <div style="font-size: 18px; font-weight: 600; color: var(--primary-color); margin-bottom: 12px; text-align: center;">
+                    📍 兑换地点
+            </div>
+                <div style="font-size: 20px; font-weight: 600; color: #d35400; text-align: center; margin-bottom: 15px;">
+                    罗源南门堂圣物部
+            </div>
+                <div style="font-size: 16px; color: #856404; text-align: center; font-weight: 500; padding-top: 15px; border-top: 2px solid rgba(255,215,0,0.3);">
+                    ⚠️ 重要提示：每月总共只能兑换一次（基础或高级任选其一）
+            </div>
         </div>
+            
+            <div style="margin-bottom: 25px; text-align: center; background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%); padding: 20px; border-radius: 16px; border: 2px solid rgba(255, 215, 0, 0.3);">
+                <div style="font-size: 16px; color: #666; margin-bottom: 8px;">当前兑换点</div>
+                <div style="font-size: 36px; font-weight: 700; color: var(--accent-color); margin-bottom: 5px;" id="userExchangePoints">0</div>
+                <div style="font-size: 12px; color: #999;">可用于兑换实物奖励</div>
     </div>
+
+            <!-- 基础兑换 -->
+            <div class="exchange-item">
+                <div class="exchange-header">
+                    <div class="exchange-title">【基础兑换】</div>
+                    <div class="exchange-badge basic">基础</div>
+            </div>
+                <div class="exchange-desc">钓圣人徽章机会</div>
+                <div class="exchange-cost">
+                    <span class="exchange-cost-label">消耗兑换点</span>
+                    <span class="exchange-cost-value">1 点</span>
+            </div>
+                <button class="exchange-btn basic" id="basicRedeemBtn" onclick="redeem('basic')">
+                    立即兑换
+                </button>
+                <div class="exchange-status" id="basicStatus" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+            </div>
+
+            <!-- 高级兑换 -->
+            <div class="exchange-item premium">
+                <div class="exchange-header">
+                    <div class="exchange-title">【高级兑换】</div>
+                    <div class="exchange-badge">高级</div>
+            </div>
+                <div class="exchange-desc">指定圣人徽章</div>
+                <div class="exchange-cost">
+                    <span class="exchange-cost-label">消耗兑换点</span>
+                    <span class="exchange-cost-value">5 点</span>
+                </div>
+                <button class="exchange-btn premium" id="premiumRedeemBtn" onclick="redeem('premium')">
+                    立即兑换
+                </button>
+                <div class="exchange-status" id="premiumStatus" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+            </div>
+
+        </div>
+            </div>
+
+    <!-- 抽卡结果展示弹窗 -->
+    <div class="modal" id="resultModal">
+        <div class="modal-content" style="text-align: center;">
+            <div id="resultBadge" class="new-card-badge" style="display:none;">✨ 新卡片</div>
+            <h3 id="resultTitle" style="margin-bottom: 15px;">卡片名称</h3>
+            <img id="resultImage" src="" alt="Card" style="max-width: 100%; border-radius: 10px; margin-bottom: 15px;">
+            <p id="resultMessage" style="color: #666; margin-bottom: 20px;">恭喜获得！</p>
+            <button class="action-btn btn-draw" onclick="closeResultModal()">收入囊中</button>
+        </div>
+            </div>
 
     <!-- 反馈弹窗 -->
-    <div class="card-modal" id="feedbackModal">
-        <div class="card-content" style="max-width: 500px;">
-            <h2 style="margin-bottom: 20px; color: #333;">📝 提交反馈</h2>
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; color: #666; font-size: 14px;">反馈类型</label>
-                <select id="feedbackType" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
-                    <option value="bug">Bug反馈</option>
-                    <option value="suggestion">建议</option>
+    <div class="modal" id="feedbackModal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="closeFeedbackModal()">×</button>
+            <h3>📝 提交反馈</h3>
+            <div style="margin-top: 15px;">
+                <select id="feedbackType" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                    <option value="bug">功能故障</option>
+                    <option value="suggestion">改进建议</option>
                     <option value="other">其他</option>
                 </select>
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; color: #666; font-size: 14px;">反馈内容</label>
-                <textarea id="feedbackContent" placeholder="请描述您遇到的问题或建议..." style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; min-height: 120px; resize: vertical; font-family: inherit;"></textarea>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-primary" onclick="submitFeedback()" style="flex: 1;">提交</button>
-                <button class="btn btn-secondary" onclick="closeFeedbackModal()" style="flex: 1;">取消</button>
+                <textarea id="feedbackContent" placeholder="请告诉我们您的想法..." style="width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: 1px solid #ddd;"></textarea>
+                <button class="action-btn btn-draw" style="margin-top: 15px;" onclick="submitFeedback()">提交</button>
             </div>
         </div>
-    </div>
-
-    <!-- 系统介绍弹窗 -->
-    <div class="intro-modal" id="introModal">
-        <div class="intro-content">
-            <button class="close-intro" onclick="closeIntro()">×</button>
-            <h2>📖 系统介绍</h2>
-            
-            <div class="intro-section">
-                <h3>🎴 每日抽卡</h3>
-                <p>每天可以抽取一张卡片，新卡概率70%，重复卡片概率30%。抽到新卡会自动加入您的卡包。</p>
-                <p style="color: #999; font-size: 12px;">💡 提示：每天只能抽一次，记得每天来打卡哦！</p>
             </div>
 
-            <div class="intro-section">
-                <h3>🏆 成就系统</h3>
-                <p>完成特定条件可以解锁成就：</p>
-                <ul>
-                    <li><strong>第一张卡：</strong>获得第一张卡片（奖励1兑换点）</li>
-                    <li><strong>集齐系列：</strong>集齐一个系列的所有卡片（奖励5兑换点）</li>
-                    <li><strong>收集里程碑：</strong>每收集7张不重复卡片（奖励1兑换点）</li>
-                </ul>
-                <p>解锁成就后记得去成就页面领取兑换点奖励！</p>
-            </div>
-
-            <div class="intro-section">
-                <h3>💰 兑换系统</h3>
-                <p>使用兑换点可以到指定地点兑换实物奖励：</p>
-                <ul>
-                    <li>完成成就后可领取兑换点</li>
-                    <li>每月只能兑换一次</li>
-                    <li>每次兑换消耗1个兑换点</li>
-                    <li>兑换地点：罗源的角落</li>
-                </ul>
-            </div>
-
-            <div class="intro-section">
-                <h3>📚 卡包管理</h3>
-                <p>在卡包页面可以查看所有收集的卡片，点击卡片可以查看详情并保存到本地（带水印）。</p>
-            </div>
-
-            <div class="intro-section">
-                <h3>💭 每日语录</h3>
-                <p>每天都会显示一句不同的天主教语录，为您带来每日的灵性启发。</p>
-            </div>
-
-            <div style="text-align: center; margin-top: 25px;">
-                <button class="btn" onclick="closeIntro()" style="padding: 10px 30px;">我知道了</button>
+    <!-- 介绍弹窗 -->
+    <div class="modal" id="introModal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="closeIntro()">×</button>
+            <h3>📖 系统介绍</h3>
+            <div style="margin-top: 15px; line-height: 1.6; color: #555; font-size: 14px;">
+                <p><strong>1. 每日打卡：</strong>每天登录可抽取一张圣像卡片，收集您的专属图鉴。</p>
+                <p style="margin-top: 10px;"><strong>2. 成就系统：</strong>完成收集任务可获得成就点数。</p>
+                <p style="margin-top: 10px;"><strong>3. 兑换商店：</strong>使用成就点数兑换实体奖励（即将开放）。</p>
+                <p style="margin-top: 10px;"><strong>4. 每日圣言：</strong>每天一句天主圣言，滋养心灵。</p>
             </div>
         </div>
     </div>
 
     <script>
-        // 检查登录状态
+        // ==================== 基础状态检查 ====================
         const token = localStorage.getItem('token');
         if (!token) {
             window.location.href = '/login.html';
         }
 
-        // 验证token有效性
-        fetch('/api/user/profile', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        })
-        .then(res => {
-            if (!res.ok) {
+        function logout() {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 window.location.href = '/login.html';
             }
-        })
-        .catch(() => {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login.html';
-        });
 
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login.html';
+        // ==================== 弹窗控制 ====================
+        function openModal(id) {
+            document.getElementById(id).classList.add('show');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
         }
 
-        // 图片列表（将从服务器获取）
-        let imageList = [];
-        let currentImageIndex = -1;
-
-        // 获取图片列表
-        async function fetchImageList() {
-            try {
-                const response = await fetch('/images/list.json');
-                if (response.ok) {
-                    const data = await response.json();
-                    imageList = data.images || [];
-                } else {
-                    // 如果列表文件不存在，尝试自动发现图片
-                    imageList = await discoverImages();
-                }
-            } catch (error) {
-                console.log('获取图片列表失败，尝试自动发现:', error);
-                imageList = await discoverImages();
+        function openDrawModal() { 
+            openModal('drawModal'); 
+            if (!document.querySelector('#imageWrapper img')) {
+                loadRandomImage();
             }
         }
-
-        // 自动发现图片（如果list.json不存在）
-        async function discoverImages() {
-            // 默认图片列表（可以根据实际情况修改）
-            const defaultImages = [
-                '/images/image1.jpg',
-                '/images/image2.jpg',
-                '/images/image3.jpg',
-                '/images/image4.jpg',
-                '/images/image5.jpg'
-            ];
-            
-            // 验证哪些图片存在
-            const existingImages = [];
-            for (const img of defaultImages) {
-                try {
-                    const response = await fetch(img, { method: 'HEAD' });
-                    if (response.ok) {
-                        existingImages.push(img);
-                    }
-                } catch (e) {
-                    // 忽略错误
-                }
-            }
-            
-            return existingImages.length > 0 ? existingImages : defaultImages;
-        }
-
-        // 加载随机图片
-        async function loadRandomImage() {
-            if (imageList.length === 0) {
-                await fetchImageList();
-            }
-
-            if (imageList.length === 0) {
-                document.getElementById('imageWrapper').innerHTML = 
-                    '<div class="loading">暂无可用图片</div>';
-                return;
-            }
-
-            // 随机选择一张图片（确保与当前图片不同）
-            let randomIndex;
-            do {
-                randomIndex = Math.floor(Math.random() * imageList.length);
-            } while (randomIndex === currentImageIndex && imageList.length > 1);
-            
-            currentImageIndex = randomIndex;
-            const imageUrl = imageList[randomIndex];
-
-            const imageWrapper = document.getElementById('imageWrapper');
-            imageWrapper.innerHTML = '<div class="loading">加载中...</div>';
-
-            const img = new Image();
-            img.onload = function() {
-                imageWrapper.innerHTML = '';
-                img.className = 'fade-in';
-                img.style.maxWidth = '100%';
-                img.style.maxHeight = '65vh';
-                img.style.width = 'auto';
-                img.style.height = 'auto';
-                img.style.objectFit = 'contain';
-                imageWrapper.appendChild(img);
-            };
-            img.onerror = function() {
-                imageWrapper.innerHTML = '<div class="loading">图片加载失败</div>';
-            };
-            img.src = imageUrl;
-        }
-
-        // 抽卡功能
-        async function drawCard() {
-            const drawBtn = document.getElementById('drawBtn');
-            drawBtn.disabled = true;
-            drawBtn.classList.add('draw-animation');
-            drawBtn.textContent = '抽卡中...';
-
-            try {
-                const response = await fetch('/api/draw', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    // 显示抽到的卡片
-                    showCardResult(data);
-                    // 更新显示的图片
-                    displayCard(data.card);
-                    // 检查是否有新成就
-                    if (data.new_achievements && data.new_achievements.length > 0) {
-                        setTimeout(() => {
-                            showAchievementNotification(data.new_achievements);
-                        }, 1500);
-                    }
-                    // 更新按钮状态和启动倒计时
-                    const drawBtn = document.getElementById('drawBtn');
-                    drawBtn.disabled = true;
-                    drawBtn.textContent = '✅ 今日已抽卡';
-                    startCountdown();
-                } else {
-                    showToast(data.error || '抽卡失败', 'error');
-                    drawBtn.disabled = false;
-                    drawBtn.textContent = '抽卡';
-                }
-            } catch (error) {
-                showToast('网络错误，请稍后重试', 'error');
-                drawBtn.disabled = false;
-                drawBtn.textContent = '抽卡';
-            } finally {
-                drawBtn.classList.remove('draw-animation');
-            }
-        }
-
-        function showCardResult(data) {
-            const modal = document.getElementById('cardModal');
-            const badge = document.getElementById('cardBadge');
-            const title = document.getElementById('cardTitle');
-            const image = document.getElementById('cardImage');
-            const message = document.getElementById('cardMessage');
-
-            title.textContent = data.card.name || '神秘卡片';
-            message.textContent = data.message;
-
-            // 优化图片加载：先显示加载状态
-            image.style.opacity = '0.5';
-            image.onload = function() {
-                this.style.opacity = '1';
-                this.style.transition = 'opacity 0.3s';
-            };
-            image.onerror = function() {
-                this.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'400\'%3E%3Crect fill=\'%23ddd\' width=\'300\' height=\'400\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\' font-size=\'18\'%3E图片加载失败%3C/text%3E%3C/svg%3E';
-                this.style.opacity = '1';
-            };
-            
-            // 设置超时处理
-            const timeoutId = setTimeout(() => {
-                if (image.complete === false || image.naturalWidth === 0) {
-                    image.onerror();
-                }
-            }, 10000); // 10秒超时
-            
-            image.onload = function() {
-                clearTimeout(timeoutId);
-                this.style.opacity = '1';
-                this.style.transition = 'opacity 0.3s';
-            };
-            
-            image.src = data.card.image_url;
-
-            if (data.is_new_card) {
-                badge.style.display = 'inline-block';
-                badge.textContent = '✨ 新卡片！';
-            } else {
-                badge.style.display = 'inline-block';
-                badge.textContent = '🔄 重复卡片';
-                badge.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-            }
-
-            modal.classList.add('show');
-        }
-
-        function closeCardModal() {
-            const modal = document.getElementById('cardModal');
-            modal.classList.remove('show');
-            const drawBtn = document.getElementById('drawBtn');
-            drawBtn.disabled = false;
-            drawBtn.textContent = '抽卡';
-        }
-
-        function displayCard(card) {
-            const imageWrapper = document.getElementById('imageWrapper');
-            imageWrapper.innerHTML = '';
-            const img = document.createElement('img');
-            img.src = card.image_url;
-            img.className = 'fade-in';
-            img.alt = card.name;
-            img.style.maxWidth = '100%';
-            img.style.maxHeight = '65vh';
-            img.style.width = 'auto';
-            img.style.height = 'auto';
-            img.style.objectFit = 'contain';
-            imageWrapper.appendChild(img);
-        }
-
-        // Toast提示函数
-        function showToast(message, type = 'info', duration = 3000) {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 10);
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, duration);
-        }
-
-        // 计算倒计时
-        let countdownInterval = null;
+        function closeDrawModal() { closeModal('drawModal'); }
         
-        function updateCountdown() {
-            const now = new Date();
-            const tomorrow = new Date(now);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            tomorrow.setHours(0, 0, 0, 0);
-            
-            const diff = tomorrow - now;
-            
-            if (diff <= 0) {
-                // 已经是明天了，可以抽卡
-                const countdownContainer = document.getElementById('countdownContainer');
-                if (countdownContainer) {
-                    countdownContainer.style.display = 'none';
-                }
-                const drawBtn = document.getElementById('drawBtn');
-                if (drawBtn) {
-                    drawBtn.disabled = false;
-                    drawBtn.textContent = '抽卡';
-                }
-                if (countdownInterval) {
-                    clearInterval(countdownInterval);
-                    countdownInterval = null;
-                }
-                return;
-            }
-            
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            
-            const countdownTime = document.getElementById('countdownTime');
-            const countdownContainer = document.getElementById('countdownContainer');
-            
-            if (countdownTime && countdownContainer) {
-                // 格式化显示：HH:MM:SS
-                const formatTime = (num) => String(num).padStart(2, '0');
-                countdownTime.textContent = `${formatTime(hours)}:${formatTime(minutes)}:${formatTime(seconds)}`;
-                countdownContainer.style.display = 'flex';
+        function openExchangeModal() { 
+            openModal('exchangeModal');
+            loadExchangeInfo();
+        }
+        function closeExchangeModal() { closeModal('exchangeModal'); }
+
+        function showFeedbackModal() { openModal('feedbackModal'); }
+        function closeFeedbackModal() { closeModal('feedbackModal'); }
+
+        function showIntro() { openModal('introModal'); }
+        function closeIntro() { closeModal('introModal'); }
+
+        function closeResultModal() { closeModal('resultModal'); }
+
+        // 点击背景关闭弹窗
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('show');
             }
         }
 
-        // 启动倒计时
-        function startCountdown() {
-            // 清除旧的倒计时
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-            }
-            // 立即更新一次
-            updateCountdown();
-            // 每秒更新一次
-            countdownInterval = setInterval(updateCountdown, 1000);
-        }
-
-        // 停止倒计时
-        function stopCountdown() {
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-                countdownInterval = null;
-            }
-            const countdownContainer = document.getElementById('countdownContainer');
-            if (countdownContainer) {
-                countdownContainer.style.display = 'none';
-            }
-        }
-
-        // 页面加载时检查今天是否已抽卡
-        async function checkTodayDraw() {
-            try {
-                const response = await fetch('/api/draw/check', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.has_drawn && data.card) {
-                        // 今天已抽卡，显示卡片
-                        displayCard(data.card);
-                        const drawBtn = document.getElementById('drawBtn');
-                        drawBtn.disabled = true;
-                        drawBtn.textContent = '✅ 今日已抽卡';
-                        // 启动倒计时
-                        startCountdown();
-                    } else {
-                        // 今天还没抽卡
-                        const drawBtn = document.getElementById('drawBtn');
-                        drawBtn.disabled = false;
-                        drawBtn.textContent = '抽卡';
-                        // 确保倒计时隐藏
-                        stopCountdown();
-                    }
-                }
-            } catch (error) {
-                console.error('检查抽卡状态失败:', error);
-            }
-        }
-
-        // 显示成就通知
-        function showAchievementNotification(achievements) {
-            if (!achievements || achievements.length === 0) return;
-            
-            const firstAchievement = achievements[0];
-            const notification = document.getElementById('achievementNotification');
-            document.getElementById('achievementTitle').textContent = firstAchievement.achievement_type.name;
-            document.getElementById('achievementDesc').textContent = firstAchievement.achievement_type.description;
-            document.getElementById('achievementReward').textContent = 
-                `奖励: ${firstAchievement.achievement_type.reward_points} 兑换点`;
-            
-            notification.classList.add('show');
-        }
-
-        // 关闭成就通知
-        function closeAchievementNotification() {
-            document.getElementById('achievementNotification').classList.remove('show');
-        }
-
-        // 显示系统介绍
-        function showIntro() {
-            document.getElementById('introModal').classList.add('show');
-        }
-
-        // 关闭系统介绍
-        function closeIntro() {
-            document.getElementById('introModal').classList.remove('show');
-        }
-
-        // 点击弹窗外部关闭
-        document.getElementById('introModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeIntro();
-            }
-        });
-
-        // 显示反馈弹窗
-        function showFeedbackModal() {
-            document.getElementById('feedbackModal').classList.add('show');
-            document.getElementById('feedbackContent').value = '';
-            document.getElementById('feedbackType').value = 'bug';
-        }
-
-        // 关闭反馈弹窗
-        function closeFeedbackModal() {
-            document.getElementById('feedbackModal').classList.remove('show');
-        }
-
-        // 提交反馈
-        async function submitFeedback() {
-            const content = document.getElementById('feedbackContent').value.trim();
-            const type = document.getElementById('feedbackType').value;
-
-            if (!content) {
-                alert('请输入反馈内容');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/feedback', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        content: content,
-                        type: type
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    alert(data.message || '反馈提交成功！');
-                    closeFeedbackModal();
-                } else {
-                    alert(data.error || '提交失败，请稍后重试');
-                }
-            } catch (error) {
-                alert('网络错误，请稍后重试');
-            }
-        }
-
-        // 点击弹窗外部关闭
-        document.getElementById('feedbackModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeFeedbackModal();
-            }
-        });
-
-        // 加载每日语录
+        // ==================== 每日语录 ====================
         async function loadDailyQuote() {
             try {
                 const response = await fetch('/api/daily-quote');
                 if (response.ok) {
                     const data = await response.json();
                     document.getElementById('quoteText').textContent = data.quote;
-                    const date = new Date(data.date);
+                    const date = new Date();
                     document.getElementById('quoteDate').textContent = 
-                        `${date.getMonth() + 1}月${date.getDate()}日 每日语录`;
-                } else {
-                    document.getElementById('quoteText').textContent = 
-                        '天主是爱，住在爱内的，就住在天主内。';
+                        `${date.getMonth() + 1}月${date.getDate()}日 每日圣言`;
+                    }
+                } catch (e) {
+                console.error('加载语录失败', e);
+                document.getElementById('quoteText').textContent = "天主是爱，住在爱内的，就住在天主内。";
                 }
-            } catch (error) {
-                console.error('加载语录失败:', error);
-                document.getElementById('quoteText').textContent = 
-                    '天主是爱，住在爱内的，就住在天主内。';
+            }
+            
+        // ==================== 图片加载 ====================
+        async function loadRandomImage() {
+            const wrapper = document.getElementById('imageWrapper');
+            try {
+                const response = await fetch('/images/list.json');
+                    if (response.ok) {
+                    const data = await response.json();
+                    const list = data.images || [];
+                    if (list.length > 0) {
+                        const randomImg = list[Math.floor(Math.random() * list.length)];
+                        wrapper.innerHTML = `<img src="${randomImg}" alt="Preview">`;
+                    }
+                    }
+                } catch (e) {
+                wrapper.innerHTML = '<div>无法加载预览</div>';
             }
         }
 
-        // 页面加载时自动检查今天是否已抽卡
-        window.addEventListener('load', function() {
-            loadDailyQuote();
-            checkTodayDraw();
-        });
+        // ==================== 抽卡逻辑 ====================
+        let currentLocation = null;
+        let locationCheckEnabled = false;
 
-        // 页面可见性变化时，如果已抽卡则重新启动倒计时
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) {
+        // 检查位置校验是否启用
+        async function checkLocationSetting() {
+            try {
+                const response = await fetch('/api/location-setting', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    locationCheckEnabled = data.enabled || false;
+                    console.log('📍 位置校验状态:', locationCheckEnabled ? '已启用' : '已禁用');
+                }
+            } catch (e) {
+                console.error('检查位置设置失败:', e);
+                locationCheckEnabled = false; // 出错时默认关闭
+            }
+        }
+
+        // 获取用户位置
+        function getCurrentLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('浏览器不支持地理位置服务'));
+                return;
+            }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        });
+                    },
+                    (error) => {
+                        reject(error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+        }
+
+        async function drawCard() {
+            const btn = document.getElementById('drawBtn');
+            btn.disabled = true;
+            btn.textContent = "祈祷中...";
+
+            try {
+                // 如果启用了位置校验，先获取位置
+                let requestBody = {};
+                if (locationCheckEnabled) {
+                    console.log('📍 位置校验已启用，正在获取位置...');
+                    try {
+                        currentLocation = await getCurrentLocation();
+                        console.log('📍 获取到位置:', currentLocation);
+                        requestBody = {
+                            latitude: currentLocation.latitude,
+                            longitude: currentLocation.longitude
+                        };
+                    } catch (locationError) {
+                        console.error('📍 获取位置失败:', locationError);
+                        showToast('无法获取位置信息，请允许位置权限', 'error');
+                        btn.disabled = false;
+                        btn.textContent = "开始抽卡";
+                        return;
+                    }
+                } else {
+                    console.log('📍 位置校验未启用，跳过位置检查');
+                }
+
+                const response = await fetch('/api/draw', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(data);
+                    setDrawnState();
+                } else {
+                    showToast(data.error || '抽卡失败', 'error');
+                    btn.disabled = false;
+                    btn.textContent = "开始抽卡";
+                }
+            } catch (e) {
+                showToast('网络错误', 'error');
+                btn.disabled = false;
+                btn.textContent = "开始抽卡";
+            }
+        }
+
+        function showResult(data) {
+            document.getElementById('resultTitle').textContent = data.card.name;
+            document.getElementById('resultImage').src = data.card.image_url;
+            document.getElementById('resultMessage').textContent = data.message;
+            
+            const badge = document.getElementById('resultBadge');
+            if (data.is_new_card) {
+                badge.style.display = 'inline-block';
+                badge.textContent = '✨ 新收集';
+                badge.style.background = 'linear-gradient(45deg, #ff9a9e, #fad0c4)';
+            } else {
+                badge.style.display = 'inline-block';
+                badge.textContent = '🔄 已拥有';
+                badge.style.background = '#ddd';
+            }
+            
+            openModal('resultModal');
+        }
+
+        function setDrawnState() {
+            const btn = document.getElementById('drawBtn');
+            const countdownBox = document.getElementById('countdownContainer');
+            
+            btn.disabled = true;
+            btn.textContent = "✅ 今日已完成打卡";
+            countdownBox.style.display = 'flex';
+            startCountdown();
+        }
+
+        // ==================== 倒计时 ====================
+        let countdownTimer;
+        function startCountdown() {
+            updateTime();
+            countdownTimer = setInterval(updateTime, 1000);
+        }
+
+        function updateTime() {
+            const now = new Date();
+            // 获取北京时间（UTC+8）
+            const beijingOffset = 8 * 60; // 8小时 = 480分钟
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const beijingTime = new Date(utc + (beijingOffset * 60000));
+            
+            // 计算下一个下午4点（北京时间）
+            const nextReset = new Date(beijingTime);
+            const currentHour = beijingTime.getHours();
+            
+            if (currentHour < 16) {
+                // 如果当前时间在下午4点之前，今天下午4点重置
+                nextReset.setHours(16, 0, 0, 0);
+            } else {
+                // 如果当前时间在下午4点之后，明天下午4点重置
+                nextReset.setDate(nextReset.getDate() + 1);
+                nextReset.setHours(16, 0, 0, 0);
+            }
+            
+            // 计算时间差（毫秒）
+            const diff = nextReset.getTime() - beijingTime.getTime();
+            
+            if (diff <= 0) {
+                // 重置状态
+                clearInterval(countdownTimer);
                 const drawBtn = document.getElementById('drawBtn');
-                if (drawBtn && drawBtn.disabled && drawBtn.textContent === '✅ 今日已抽卡') {
-                    startCountdown();
+                if (drawBtn) {
+                    drawBtn.disabled = false;
+                    drawBtn.textContent = "开始抽卡";
+                }
+                const countdownContainer = document.getElementById('countdownContainer');
+                if (countdownContainer) {
+                    countdownContainer.style.display = 'none';
+                }
+                return;
+            }
+            
+            const h = Math.floor(diff / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            const countdownTime = document.getElementById('countdownTime');
+            if (countdownTime) {
+                countdownTime.textContent = 
+                    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            }
+        }
+
+        // ==================== 检查今日状态 ====================
+        async function checkTodayStatus() {
+            try {
+                const response = await fetch('/api/draw/check', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    // 使用北京时间判断是否已抽卡
+                    const now = new Date();
+                    const beijingOffset = 8 * 60;
+                    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                    const beijingTime = new Date(utc + (beijingOffset * 60000));
+                    const isAfter4PM = beijingTime.getHours() >= 16;
+                    
+                    if (data.has_drawn) {
+                        setDrawnState();
+                        if (data.card) {
+                            const wrapper = document.getElementById('imageWrapper');
+                            wrapper.innerHTML = `<img src="${data.card.image_url}" alt="Today Card">`;
+                        }
+                    } else {
+                        loadRandomImage();
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // ==================== 兑换商店 ====================
+        async function loadExchangeInfo() {
+            try {
+                const response = await fetch('/api/user/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('userExchangePoints').textContent = user.exchange_points || 0;
+                }
+
+                // 加载兑换状态
+                const redeemResponse = await fetch('/api/redemption-info', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (redeemResponse.ok) {
+                    const redeemData = await redeemResponse.json();
+                    updateExchangeButtons(redeemData);
+                }
+            } catch (e) {
+                console.error('加载兑换信息失败:', e);
+            }
+        }
+
+        function updateExchangeButtons(data) {
+            const basicBtn = document.getElementById('basicRedeemBtn');
+            const premiumBtn = document.getElementById('premiumRedeemBtn');
+            const basicStatus = document.getElementById('basicStatus');
+            const premiumStatus = document.getElementById('premiumStatus');
+
+            // 检查是否已兑换（不管哪种类型，一个月总共只能兑换一次）
+            const hasRedeemed = data.has_redeemed || false;
+            const redeemedType = data.redeemed_type || '';
+            const redeemedAt = data.redeemed_at || '';
+
+            if (hasRedeemed) {
+                // 如果已兑换，两个按钮都禁用
+                basicBtn.disabled = true;
+                premiumBtn.disabled = true;
+                
+                if (redeemedType === 'basic') {
+                    basicBtn.textContent = '本月已兑换';
+                    basicStatus.innerHTML = `<span style="color: var(--accent-color);">✅ 已兑换于 ${redeemedAt}</span>`;
+                    premiumBtn.textContent = '本月已兑换（基础）';
+                    premiumStatus.innerHTML = '<span style="color: #999;">本月已使用基础兑换</span>';
+                } else if (redeemedType === 'premium') {
+                    premiumBtn.textContent = '本月已兑换';
+                    premiumStatus.innerHTML = `<span style="color: var(--accent-color);">✅ 已兑换于 ${redeemedAt}</span>`;
+                    basicBtn.textContent = '本月已兑换（高级）';
+                    basicStatus.innerHTML = '<span style="color: #999;">本月已使用高级兑换</span>';
+                } else {
+                    basicBtn.textContent = '本月已兑换';
+                    premiumBtn.textContent = '本月已兑换';
+                    basicStatus.innerHTML = '<span style="color: #999;">本月已兑换</span>';
+                    premiumStatus.innerHTML = '<span style="color: #999;">本月已兑换</span>';
+                }
+            } else {
+                // 未兑换，检查兑换点是否足够
+                if (data.exchange_points < 1) {
+                    basicBtn.disabled = true;
+                    basicBtn.textContent = '兑换点不足';
+                    basicStatus.innerHTML = '<span style="color: #e74c3c;">兑换点不足</span>';
+                } else {
+                    basicBtn.disabled = false;
+                    basicBtn.textContent = '立即兑换（消耗1点）';
+                    basicStatus.innerHTML = '';
+                }
+
+                if (data.exchange_points < 5) {
+                    premiumBtn.disabled = true;
+                    premiumBtn.textContent = '兑换点不足';
+                    premiumStatus.innerHTML = '<span style="color: #e74c3c;">兑换点不足（需要5点）</span>';
+                } else {
+                    premiumBtn.disabled = false;
+                    premiumBtn.textContent = '立即兑换（消耗5点）';
+                    premiumStatus.innerHTML = '';
                 }
             }
+        }
+
+        async function redeem(type) {
+            const cost = type === 'basic' ? 1 : 5;
+            const typeName = type === 'basic' ? '基础兑换（钓圣人徽章机会）' : '高级兑换（指定圣人徽章）';
+            
+            if (!confirm(`确定要兑换 ${typeName} 吗？\n将消耗 ${cost} 个兑换点，每月只能兑换一次。`)) {
+                return;
+            }
+
+            const btn = document.getElementById(type === 'basic' ? 'basicRedeemBtn' : 'premiumRedeemBtn');
+            btn.disabled = true;
+            btn.textContent = '兑换中...';
+
+            try {
+                const response = await fetch('/api/redeem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ type: type })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast(data.message || '兑换成功！', 'success');
+                    setTimeout(() => {
+                        loadExchangeInfo();
+                    }, 1000);
+                } else {
+                    showToast(data.error || data.message || '兑换失败', 'error');
+                    btn.disabled = false;
+                    btn.textContent = `立即兑换（消耗${cost}点）`;
+                }
+            } catch (error) {
+                showToast('网络错误，请稍后重试', 'error');
+                btn.disabled = false;
+                btn.textContent = `立即兑换（消耗${cost}点）`;
+            }
+        }
+
+        // ==================== 反馈提交 ====================
+        async function submitFeedback() {
+            const content = document.getElementById('feedbackContent').value;
+            const type = document.getElementById('feedbackType').value;
+            if(!content.trim()) return showToast('请输入内容');
+
+            try {
+                const res = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ content, type })
+                });
+                if (res.ok) {
+                    showToast('反馈已提交，感谢您的建议！');
+                    closeFeedbackModal();
+                    document.getElementById('feedbackContent').value = '';
+                } else {
+                    showToast('提交失败', 'error');
+                }
+            } catch(e) {
+                showToast('网络错误', 'error');
+            }
+        }
+
+        // ==================== 工具函数 ====================
+        function showToast(msg, type='info') {
+            const toast = document.createElement('div');
+            toast.className = `toast show`;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // 初始化
+        window.addEventListener('load', () => {
+            loadDailyQuote();
+            checkTodayStatus();
+            checkLocationSetting(); // 检查位置校验设置
         });
     </script>
 </body>
 </html>
-

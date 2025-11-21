@@ -26,7 +26,7 @@ func CheckAchievements(userID int) ([]models.AchievementStatus, error) {
 		return nil, err
 	}
 
-	// 检查成就1: 第一张卡
+	// 检查成就1: 一点星星之光 - 获得第一张卡
 	if cardCount >= 1 {
 		err = checkAndUnlockAchievement(userID, "first_card")
 		if err == nil {
@@ -37,27 +37,93 @@ func CheckAchievements(userID int) ([]models.AchievementStatus, error) {
 		}
 	}
 
-	// 检查成就2: 集齐一个系列
-	err = checkCompleteSeries(userID)
-	if err == nil {
-		ach, _ := getAchievementStatus(userID, "complete_series")
-		if ach != nil && !ach.Claimed && ach.Unlocked {
-			// 检查是否是新解锁的（解锁时间在最近1分钟内）
-			if ach.UnlockedAt != nil {
-				timeDiff := time.Since(*ach.UnlockedAt)
-				if timeDiff < time.Minute {
+	// 检查成就2: 朝圣新星 - 累计在3个不同的教堂打卡成功
+	// 这里暂时用累计打卡3次来模拟（实际应该是3个不同地点）
+	var checkinCount int
+	database.DB.QueryRow(
+		"SELECT COUNT(DISTINCT draw_date) FROM daily_draws WHERE user_id = $1",
+		userID,
+	).Scan(&checkinCount)
+	if checkinCount >= 3 {
+		err = checkAndUnlockAchievement(userID, "pilgrim_nova")
+		if err == nil {
+			ach, _ := getAchievementStatus(userID, "pilgrim_nova")
+			if ach != nil && !ach.Claimed {
+				newAchievements = append(newAchievements, *ach)
+			}
+		}
+	}
+
+	// 检查成就3: 收集天上的宝藏 - 每7张不同卡片就会点亮一次（自动领取）
+	// 条件：卡片数 >= 7 且卡片数是7的倍数
+	// 这个成就是自动领取的，每达到7的倍数就自动获得奖励
+	if cardCount >= 7 && cardCount%7 == 0 {
+		// 检查这个里程碑是否已经领取过（使用milestone_claims表追踪）
+		var alreadyClaimed bool
+		err = database.DB.QueryRow(
+			"SELECT EXISTS(SELECT 1 FROM milestone_claims WHERE user_id = $1 AND card_count = $2)",
+			userID, cardCount,
+		).Scan(&alreadyClaimed)
+
+		if !alreadyClaimed {
+			// 获取奖励点数
+			var rewardPoints int
+			database.DB.QueryRow(
+				"SELECT reward_points FROM achievement_types WHERE code = 'milestone_7'",
+			).Scan(&rewardPoints)
+
+			// 记录这次里程碑领取
+			_, err = database.DB.Exec(
+				"INSERT INTO milestone_claims (user_id, card_count) VALUES ($1, $2)",
+				userID, cardCount,
+			)
+			if err == nil {
+				// 自动增加兑换点
+				database.DB.Exec(
+					"UPDATE users SET exchange_points = exchange_points + $1 WHERE id = $2",
+					rewardPoints, userID,
+				)
+
+				// 确保成就已解锁（用于显示）
+				var achievementTypeID int
+				database.DB.QueryRow(
+					"SELECT id FROM achievement_types WHERE code = 'milestone_7'",
+				).Scan(&achievementTypeID)
+
+				var exists bool
+				database.DB.QueryRow(
+					"SELECT EXISTS(SELECT 1 FROM user_achievements WHERE user_id = $1 AND achievement_type_id = $2)",
+					userID, achievementTypeID,
+				).Scan(&exists)
+
+				if !exists {
+					database.DB.Exec(
+						"INSERT INTO user_achievements (user_id, achievement_type_id, unlocked_at, claimed_at) VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+						userID, achievementTypeID,
+					)
+				} else {
+					// 更新领取时间
+					database.DB.Exec(
+						"UPDATE user_achievements SET claimed_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND achievement_type_id = $2",
+						userID, achievementTypeID,
+					)
+				}
+
+				ach, _ := getAchievementStatus(userID, "milestone_7")
+				if ach != nil {
 					newAchievements = append(newAchievements, *ach)
 				}
 			}
 		}
 	}
 
-	// 检查成就3: 每7张不重复卡片 (收集了7、14、21、28...张时解锁)
-	// 条件：卡片数 >= 7 且卡片数是7的倍数
-	if cardCount >= 7 && cardCount%7 == 0 {
-		err = checkAndUnlockAchievement(userID, "milestone_7")
+	// 检查成就4: 圣卡洛的圣体奇迹集 - 集齐所有打卡图片
+	var totalCardCount int
+	database.DB.QueryRow("SELECT COUNT(*) FROM cards").Scan(&totalCardCount)
+	if cardCount >= totalCardCount && totalCardCount > 0 {
+		err = checkAndUnlockAchievement(userID, "complete_all")
 		if err == nil {
-			ach, _ := getAchievementStatus(userID, "milestone_7")
+			ach, _ := getAchievementStatus(userID, "complete_all")
 			if ach != nil && !ach.Claimed {
 				newAchievements = append(newAchievements, *ach)
 			}
@@ -77,6 +143,14 @@ func verifyAchievementCondition(userID int, achievementCode string) bool {
 			userID,
 		).Scan(&count)
 		return count >= 1
+	case "pilgrim_nova":
+		// 朝圣新星 - 累计在3个不同的教堂打卡成功
+		var checkinCount int
+		database.DB.QueryRow(
+			"SELECT COUNT(DISTINCT draw_date) FROM daily_draws WHERE user_id = $1",
+			userID,
+		).Scan(&checkinCount)
+		return checkinCount >= 3
 	case "complete_series":
 		// 检查是否集齐一个系列
 		var rarities []string
@@ -144,6 +218,33 @@ func verifyAchievementCondition(userID int, achievementCode string) bool {
 		).Scan(&count)
 		// 必须是7的倍数且>=7
 		return count >= 7 && count%7 == 0
+	case "location_a_15", "location_b_15", "location_c_15":
+		// 地点成就：检查用户在对应地点打卡次数
+		var locationID int
+		err := database.DB.QueryRow(
+			"SELECT id FROM checkin_locations WHERE achievement_code = $1",
+			achievementCode,
+		).Scan(&locationID)
+		if err != nil {
+			return false
+		}
+
+		var checkinCount int
+		database.DB.QueryRow(
+			"SELECT COUNT(*) FROM location_checkins WHERE user_id = $1 AND location_id = $2",
+			userID, locationID,
+		).Scan(&checkinCount)
+		return checkinCount >= 15
+	case "complete_all":
+		// 圣卡洛的圣体奇迹集 - 集齐所有打卡图片
+		var userCardCount int
+		database.DB.QueryRow(
+			"SELECT COUNT(DISTINCT card_id) FROM user_cards WHERE user_id = $1",
+			userID,
+		).Scan(&userCardCount)
+		var totalCardCount int
+		database.DB.QueryRow("SELECT COUNT(*) FROM cards").Scan(&totalCardCount)
+		return totalCardCount > 0 && userCardCount >= totalCardCount
 	default:
 		return false
 	}
@@ -266,9 +367,9 @@ func GetAchievements(w http.ResponseWriter, r *http.Request) {
 	// 先检查并解锁应该解锁的成就（避免用户已有卡片但成就未解锁的情况）
 	_, _ = CheckAchievements(userID)
 
-	// 获取所有成就类型
+	// 获取所有成就类型（排除complete_series）
 	rows, err := database.DB.Query(
-		"SELECT id, code, name, description, reward_points FROM achievement_types ORDER BY id",
+		"SELECT id, code, name, description, reward_points FROM achievement_types WHERE code != 'complete_series' ORDER BY id",
 	)
 	if err != nil {
 		sendError(w, "查询失败", http.StatusInternalServerError)
@@ -287,6 +388,18 @@ func GetAchievements(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		// 如果是地点成就，动态更新描述为实际地点名称
+		if achType.Code == "location_a_15" || achType.Code == "location_b_15" || achType.Code == "location_c_15" {
+			var locationName string
+			err := database.DB.QueryRow(
+				"SELECT name FROM checkin_locations WHERE achievement_code = $1 LIMIT 1",
+				achType.Code,
+			).Scan(&locationName)
+			if err == nil && locationName != "" {
+				achType.Description = "在" + locationName + "累计打卡15次"
+			}
+		}
+
 		// 获取用户该成就的状态
 		status, _ := getAchievementStatus(userID, achType.Code)
 		if status == nil {
@@ -295,6 +408,9 @@ func GetAchievements(w http.ResponseWriter, r *http.Request) {
 				Unlocked:        false,
 				Claimed:         false,
 			}
+		} else {
+			// 更新描述（使用动态获取的地点名称）
+			status.AchievementType.Description = achType.Description
 		}
 
 		// 设置进度信息
@@ -407,6 +523,39 @@ func getAchievementProgress(userID int, achievementCode string) interface{} {
 			"current":        count,
 			"next_milestone": nextMilestone,
 		}
+	case "complete_all":
+		// 圣卡洛的圣体奇迹集 - 集齐所有打卡图片
+		var userCardCount int
+		database.DB.QueryRow(
+			"SELECT COUNT(DISTINCT card_id) FROM user_cards WHERE user_id = $1",
+			userID,
+		).Scan(&userCardCount)
+		var totalCardCount int
+		database.DB.QueryRow("SELECT COUNT(*) FROM cards").Scan(&totalCardCount)
+		return map[string]interface{}{
+			"current": userCardCount,
+			"target":  totalCardCount,
+		}
+	case "location_a_15", "location_b_15", "location_c_15":
+		// 地点成就：显示打卡进度
+		var locationID int
+		err := database.DB.QueryRow(
+			"SELECT id FROM checkin_locations WHERE achievement_code = $1",
+			achievementCode,
+		).Scan(&locationID)
+		if err != nil {
+			return nil
+		}
+
+		var checkinCount int
+		database.DB.QueryRow(
+			"SELECT COUNT(*) FROM location_checkins WHERE user_id = $1 AND location_id = $2",
+			userID, locationID,
+		).Scan(&checkinCount)
+		return map[string]interface{}{
+			"current": checkinCount,
+			"target":  15,
+		}
 	default:
 		return nil
 	}
@@ -439,6 +588,12 @@ func ClaimReward(w http.ResponseWriter, r *http.Request) {
 	).Scan(&achievementCode)
 	if err != nil {
 		sendError(w, "成就不存在", http.StatusNotFound)
+		return
+	}
+
+	// milestone_7是自动领取的，不允许手动领取
+	if achievementCode == "milestone_7" {
+		sendError(w, "此成就奖励已自动领取，无需手动操作", http.StatusForbidden)
 		return
 	}
 
@@ -505,6 +660,11 @@ func ClaimReward(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// RedeemRequest 兑换请求
+type RedeemRequest struct {
+	Type string `json:"type"` // "basic" 或 "premium"
+}
+
 // Redeem 兑换接口
 func Redeem(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -518,27 +678,58 @@ func Redeem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 解析请求体
+	var req RedeemRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		sendError(w, "请求格式错误", http.StatusBadRequest)
+		return
+	}
+
+	// 验证兑换类型
+	if req.Type != "basic" && req.Type != "premium" {
+		sendError(w, "无效的兑换类型，必须是 'basic' 或 'premium'", http.StatusBadRequest)
+		return
+	}
+
+	// 确定兑换成本
+	var cost int
+	if req.Type == "basic" {
+		cost = 1
+	} else {
+		cost = 5
+	}
+
 	// 获取当前月份
 	currentMonth := time.Now().Format("2006-01")
 
-	// 检查本月是否已兑换
+	// 检查本月是否已兑换（不管哪种类型，一个月总共只能兑换一次）
 	var alreadyRedeemed bool
 	var redeemedAt time.Time
+	var redeemedType string
 	err = database.DB.QueryRow(
-		"SELECT EXISTS(SELECT 1 FROM redemption_records WHERE user_id = $1 AND redemption_month = $2), COALESCE((SELECT redeemed_at FROM redemption_records WHERE user_id = $1 AND redemption_month = $2), CURRENT_TIMESTAMP)",
+		"SELECT EXISTS(SELECT 1 FROM redemption_records WHERE user_id = $1 AND redemption_month = $2), COALESCE((SELECT redeemed_at FROM redemption_records WHERE user_id = $1 AND redemption_month = $2 LIMIT 1), CURRENT_TIMESTAMP), COALESCE((SELECT redemption_type FROM redemption_records WHERE user_id = $1 AND redemption_month = $2 LIMIT 1), '')",
 		userID, currentMonth,
-	).Scan(&alreadyRedeemed, &redeemedAt)
+	).Scan(&alreadyRedeemed, &redeemedAt, &redeemedType)
 	if err != nil {
 		sendError(w, "查询失败", http.StatusInternalServerError)
 		return
 	}
 
 	if alreadyRedeemed {
+		var previousTypeName string
+		if redeemedType == "basic" {
+			previousTypeName = "基础兑换（钓圣人徽章机会）"
+		} else if redeemedType == "premium" {
+			previousTypeName = "高级兑换（指定圣人徽章）"
+		} else {
+			previousTypeName = "兑换"
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"error":       "本月已兑换",
-			"message":     fmt.Sprintf("您已于 %s 兑换过，请下月再来", redeemedAt.Format("2006-01-02 15:04:05")),
+			"message":     fmt.Sprintf("您已于 %s 兑换过%s，每月只能兑换一次，请下月再来", redeemedAt.Format("2006-01-02 15:04:05"), previousTypeName),
 			"redeemed_at": redeemedAt.Format("2006-01-02 15:04:05"),
 		})
 		return
@@ -555,15 +746,15 @@ func Redeem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if exchangePoints < 1 {
-		sendError(w, "兑换点不足，需要至少1个兑换点", http.StatusForbidden)
+	if exchangePoints < cost {
+		sendError(w, fmt.Sprintf("兑换点不足，需要至少%d个兑换点", cost), http.StatusForbidden)
 		return
 	}
 
-	// 记录兑换（不记录位置）
+	// 记录兑换
 	_, err = database.DB.Exec(
-		"INSERT INTO redemption_records (user_id, redemption_month) VALUES ($1, $2)",
-		userID, currentMonth,
+		"INSERT INTO redemption_records (user_id, redemption_month, redemption_type) VALUES ($1, $2, $3)",
+		userID, currentMonth, req.Type,
 	)
 	if err != nil {
 		sendError(w, "记录兑换失败", http.StatusInternalServerError)
@@ -572,8 +763,8 @@ func Redeem(w http.ResponseWriter, r *http.Request) {
 
 	// 扣除兑换点
 	_, err = database.DB.Exec(
-		"UPDATE users SET exchange_points = exchange_points - 1 WHERE id = $1",
-		userID,
+		"UPDATE users SET exchange_points = exchange_points - $1 WHERE id = $2",
+		cost, userID,
 	)
 	if err != nil {
 		sendError(w, "扣除兑换点失败", http.StatusInternalServerError)
@@ -584,8 +775,10 @@ func Redeem(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success":     true,
-		"message":     "兑换成功！请到指定地点领取奖励",
+		"message":     fmt.Sprintf("兑换成功！请到罗源南门堂圣物部领取奖励"),
 		"redeemed_at": now.Format("2006-01-02 15:04:05"),
+		"type":        req.Type,
+		"cost":        cost,
 	})
 }
 
@@ -605,14 +798,17 @@ func GetRedemptionInfo(w http.ResponseWriter, r *http.Request) {
 	// 获取当前月份
 	currentMonth := time.Now().Format("2006-01")
 
-	// 检查本月是否已兑换
+	// 检查本月是否已兑换（不管哪种类型，一个月总共只能兑换一次）
 	var redeemedAt sql.NullTime
-	err = database.DB.QueryRow(
-		"SELECT redeemed_at FROM redemption_records WHERE user_id = $1 AND redemption_month = $2",
+	var redeemedType sql.NullString
+	database.DB.QueryRow(
+		"SELECT redeemed_at, redemption_type FROM redemption_records WHERE user_id = $1 AND redemption_month = $2 LIMIT 1",
 		userID, currentMonth,
-	).Scan(&redeemedAt)
+	).Scan(&redeemedAt, &redeemedType)
 
-	hasRedeemed := err == nil && redeemedAt.Valid
+	hasRedeemed := redeemedAt.Valid
+	basicRedeemed := hasRedeemed && redeemedType.Valid && redeemedType.String == "basic"
+	premiumRedeemed := hasRedeemed && redeemedType.Valid && redeemedType.String == "premium"
 
 	// 获取用户兑换点
 	var exchangePoints int
@@ -621,12 +817,14 @@ func GetRedemptionInfo(w http.ResponseWriter, r *http.Request) {
 		userID,
 	).Scan(&exchangePoints)
 
-	// 兑换地点信息（可以从配置文件或数据库读取，这里硬编码，可以后续改为配置）
-	redemptionLocation := "罗源的角落" // TODO: 可以改为实际的地址，比如"北京市朝阳区xxx路xxx号"
+	// 兑换地点信息
+	redemptionLocation := "罗源南门堂圣物部"
 
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]interface{}{
 		"has_redeemed":        hasRedeemed,
+		"basic_redeemed":      basicRedeemed,
+		"premium_redeemed":    premiumRedeemed,
 		"exchange_points":     exchangePoints,
 		"redemption_location": redemptionLocation,
 		"current_month":       currentMonth,
@@ -634,6 +832,9 @@ func GetRedemptionInfo(w http.ResponseWriter, r *http.Request) {
 
 	if redeemedAt.Valid {
 		response["redeemed_at"] = redeemedAt.Time.Format("2006-01-02 15:04:05")
+		if redeemedType.Valid {
+			response["redeemed_type"] = redeemedType.String
+		}
 	}
 
 	json.NewEncoder(w).Encode(response)

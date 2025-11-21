@@ -3,8 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>我的卡包 - 抽卡WebApp</title>
+    <title>我的卡包 - 一步一步都有祝福</title>
     <style>
+        :root {
+            --primary-color: #1a237e;
+            --accent-color: #ffd700;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,26 +21,11 @@
         body {
             width: 100%;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-color);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             padding: 20px;
-            padding-top: 80px;
+            padding-top: 70px;
             position: relative;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px;
-            height: 300px;
-            z-index: 0;
-            pointer-events: none;
-            background-image: 
-                linear-gradient(to right, transparent 48%, rgba(255,255,255,0.03) 48%, rgba(255,255,255,0.03) 52%, transparent 52%),
-                linear-gradient(to bottom, transparent 48%, rgba(255,255,255,0.03) 48%, rgba(255,255,255,0.03) 52%, transparent 52%);
         }
 
         .header {
@@ -41,87 +33,43 @@
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            height: 60px;
+            padding: 0 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             z-index: 100;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
         }
 
         .header h1 {
-            font-size: 20px;
-            color: #333;
-            margin-right: 10px;
-        }
-
-        .header .nav-buttons {
+            font-size: 18px;
+            color: var(--primary-color);
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
             align-items: center;
+            gap: 8px;
         }
 
-        .nav-btn {
-            background: #667eea;
+        .back-btn {
+            background: var(--primary-color);
             color: white;
-            padding: 8px 16px;
+            padding: 8px 20px;
             border-radius: 20px;
             text-decoration: none;
             font-size: 14px;
             font-weight: 600;
-            white-space: nowrap;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
         }
 
-        .nav-btn:hover {
-            background: #5568d3;
-        }
-
-        /* 移动端响应式 */
-        @media (max-width: 768px) {
-            .header {
-                padding: 10px 15px;
-            }
-
-            .header h1 {
-                font-size: 18px;
-                flex: 1;
-                min-width: 120px;
-            }
-
-            .header .nav-buttons {
-                gap: 5px;
-            }
-
-            .nav-btn {
-                padding: 6px 12px;
-                font-size: 12px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 10px;
-            }
-
-            .header h1 {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-
-            .header .nav-buttons {
-                width: 100%;
-                justify-content: flex-start;
-            }
-
-            .nav-btn {
-                padding: 6px 10px;
-                font-size: 11px;
-            }
+        .back-btn:hover {
+            background: #283593;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 35, 126, 0.3);
         }
 
         .container {
@@ -133,96 +81,128 @@
 
         .stats {
             background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             text-align: center;
+            border-top: none;
+            border: 1px solid rgba(0,0,0,0.02);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
         }
 
         .stats-text {
-            font-size: 18px;
+            font-size: 15px;
             color: #666;
+            margin-bottom: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         .stats-number {
-            font-size: 32px;
-            font-weight: 600;
-            color: #667eea;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--primary-color);
             margin-top: 5px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
         }
 
         .cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
         }
 
         .card-item {
             background: white;
-            border-radius: 12px;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
             cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
         }
 
         .card-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            z-index: 10;
         }
 
         .card-image {
             width: 100%;
-            height: 200px;
+            height: 220px;
             object-fit: cover;
             display: block;
         }
 
         .card-info {
-            padding: 10px;
+            padding: 12px;
             text-align: center;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.95), white);
         }
 
         .card-name {
             font-size: 14px;
             font-weight: 600;
             color: #333;
+            line-height: 1.4;
         }
 
         .loading {
             text-align: center;
-            color: white;
+            color: var(--primary-color);
             font-size: 18px;
-            padding: 40px;
+            padding: 60px 20px;
         }
 
         .empty-state {
             text-align: center;
-            color: white;
-            padding: 60px 20px;
+            color: #666;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
         }
 
         .empty-state-icon {
-            font-size: 64px;
+            font-size: 72px;
             margin-bottom: 20px;
         }
 
         .empty-state-text {
             font-size: 18px;
             margin-bottom: 30px;
+            color: #666;
         }
 
         .empty-state-btn {
             display: inline-block;
-            padding: 12px 30px;
-            background: white;
-            color: #667eea;
-            border-radius: 25px;
+            padding: 14px 35px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #283593 100%);
+            color: white;
+            border-radius: 30px;
             text-decoration: none;
             font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .empty-state-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 35, 126, 0.3);
         }
 
         /* 卡片详情弹窗 */
@@ -233,37 +213,45 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.85);
             z-index: 2000;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            backdrop-filter: blur(5px);
         }
 
         .card-modal.show {
             display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .card-modal-content {
             background: white;
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 30px;
             max-width: 600px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
-            animation: modalAppear 0.3s ease-out;
+            animation: slideUp 0.3s ease-out;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
 
-        @keyframes modalAppear {
+        @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: scale(0.9);
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
-                transform: scale(1);
+                transform: translateY(0);
             }
         }
 
@@ -282,10 +270,12 @@
             align-items: center;
             justify-content: center;
             color: #666;
+            transition: all 0.3s;
         }
 
         .close-btn:hover {
             background: #e0e0e0;
+            transform: rotate(90deg);
         }
 
         .card-modal-image {
@@ -294,12 +284,43 @@
             object-fit: contain;
             border-radius: 15px;
             margin-bottom: 20px;
+            cursor: zoom-in;
+            transition: transform 0.3s;
+        }
+
+        .card-modal-image.zoomed {
+            cursor: zoom-out;
+            transform: scale(2);
+            max-height: none;
+        }
+
+        .image-zoom-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .zoom-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .zoom-btn:hover {
+            background: #283593;
+            transform: translateY(-2px);
         }
 
         .card-modal-title {
             font-size: 24px;
             font-weight: 600;
-            color: #333;
+            color: var(--primary-color);
             margin-bottom: 10px;
         }
 
@@ -317,21 +338,22 @@
 
         .btn {
             flex: 1;
-            padding: 12px 24px;
+            padding: 14px 24px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s;
         }
 
         .btn:hover {
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #283593 100%);
             color: white;
         }
 
@@ -343,8 +365,8 @@
         .error {
             background: #fee;
             color: #c33;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 8px;
             margin-bottom: 15px;
             font-size: 14px;
             display: none;
@@ -353,17 +375,29 @@
         .error.show {
             display: block;
         }
+
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 15px;
+            }
+            .header h1 {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 12px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>📚 我的卡包</h1>
-        <div class="nav-buttons">
-            <a href="/index.html" class="nav-btn">抽卡</a>
-            <a href="/achievements.html" class="nav-btn">成就</a>
-            <a href="/profile.html" class="nav-btn">资料</a>
-            <a href="#" onclick="logout()" class="nav-btn">退出</a>
-        </div>
+        <a href="/index.html" class="back-btn">← 返回</a>
     </div>
 
     <div class="container">
@@ -383,11 +417,16 @@
     <div class="card-modal" id="cardModal">
         <div class="card-modal-content">
             <button class="close-btn" onclick="closeCardModal()">×</button>
-            <img id="modalCardImage" class="card-modal-image" src="" alt="卡片">
+            <div class="image-zoom-controls">
+                <button class="zoom-btn" onclick="zoomImage(1.2)">🔍 放大</button>
+                <button class="zoom-btn" onclick="zoomImage(0.8)">🔍 缩小</button>
+                <button class="zoom-btn" onclick="resetZoom()">↺ 重置</button>
+            </div>
+            <img id="modalCardImage" class="card-modal-image" src="" alt="卡片" onclick="toggleZoom()">
             <div class="card-modal-title" id="modalCardName">卡片名称</div>
             <div class="card-modal-description" id="modalCardDescription">卡片描述</div>
             <div class="card-modal-actions">
-                <button class="btn btn-primary" onclick="downloadCard()">💾 保存到本地</button>
+                <button class="btn btn-primary" onclick="downloadCard()">💾 保存到本地（带水印）</button>
                 <button class="btn btn-secondary" onclick="closeCardModal()">关闭</button>
             </div>
         </div>
@@ -464,7 +503,6 @@
                 } catch (error) {
                     retryCount++;
                     if (retryCount <= maxRetries) {
-                        // 等待一段时间后重试
                         await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
                         return attemptLoad();
                     } else {
@@ -484,8 +522,8 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📭</div>
-                        <div class="empty-state-text">你还没有任何卡片<br>快去抽卡吧！</div>
-                        <a href="/index.html" class="empty-state-btn">去抽卡</a>
+                        <div class="empty-state-text">你还没有任何卡片<br>快去打卡抽卡吧！</div>
+                        <a href="/index.html" class="empty-state-btn">去打卡抽卡</a>
                     </div>
                 `;
                 return;
@@ -499,34 +537,28 @@
                 cardElement.className = 'card-item';
                 cardElement.onclick = () => showCardDetail(card.id);
                 
-                // 创建图片占位符
                 const img = document.createElement('img');
                 img.alt = card.name;
                 img.className = 'card-image';
-                img.loading = 'lazy'; // 懒加载
+                img.loading = 'lazy';
                 
-                // 显示加载状态
                 img.style.opacity = '0.5';
                 img.style.transition = 'opacity 0.3s';
                 
-                // 错误处理
                 img.onerror = function() {
                     this.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'150\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'150\' height=\'200\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\'%3E图片加载失败%3C/text%3E%3C/svg%3E';
                     this.style.opacity = '1';
                 };
                 
-                // 加载成功
                 img.onload = function() {
                     this.style.opacity = '1';
                 };
                 
-                // 延迟加载图片（分批加载，避免同时加载太多）
                 setTimeout(() => {
                     loadImageWithRetry(img, card.image_url).catch(() => {
-                        // 如果所有重试都失败，使用错误占位符
                         img.onerror();
                     });
-                }, index * 50); // 每张图片延迟50ms加载
+                }, index * 50);
                 
                 cardElement.innerHTML = `
                     <div class="card-info">
@@ -572,9 +604,37 @@
         function closeCardModal() {
             document.getElementById('cardModal').classList.remove('show');
             currentCardId = null;
+            resetZoom(); // 重置缩放
         }
 
-        // 下载卡片（带水印）
+        // 图片缩放相关
+        let currentZoom = 1;
+        const minZoom = 0.5;
+        const maxZoom = 3;
+
+        function zoomImage(factor) {
+            const img = document.getElementById('modalCardImage');
+            currentZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom * factor));
+            img.style.transform = `scale(${currentZoom})`;
+            img.style.cursor = currentZoom > 1 ? 'zoom-out' : 'zoom-in';
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            const img = document.getElementById('modalCardImage');
+            img.style.transform = 'scale(1)';
+            img.style.cursor = 'zoom-in';
+        }
+
+        function toggleZoom() {
+            if (currentZoom === 1) {
+                zoomImage(2);
+            } else {
+                resetZoom();
+            }
+        }
+
+        // 下载卡片（带水印，使用Canvas在客户端添加水印以确保中文显示正常）
         async function downloadCard() {
             if (!currentCardId) {
                 showError('卡片ID无效');
@@ -582,29 +642,92 @@
             }
 
             try {
-                const response = await fetch(`/api/card/${currentCardId}/download`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                // 先获取原始图片
+                const img = document.getElementById('modalCardImage');
+                const imgUrl = img.src;
+                
+                // 创建canvas
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const image = new Image();
+                
+                // 如果图片来自同源，不需要设置crossOrigin
+                if (!imgUrl.startsWith(window.location.origin)) {
+                    image.crossOrigin = 'anonymous';
+                }
+                
+                await new Promise((resolve, reject) => {
+                    image.onload = () => {
+                        canvas.width = image.width;
+                        canvas.height = image.height;
+                        ctx.drawImage(image, 0, 0);
+                        
+                        // 获取用户信息用于水印
+                        fetch('/api/user/profile', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                        .then(res => res.json())
+                        .then(user => {
+                            // 构建水印文本
+                            let watermarkText = '';
+                            if (user.holy_name) watermarkText += user.holy_name;
+                            if (user.nickname) {
+                                if (watermarkText) watermarkText += ' · ';
+                                watermarkText += user.nickname;
+                            }
+                            if (!watermarkText) watermarkText = '我的卡片';
+                            
+                            // 设置字体样式
+                            ctx.font = 'bold 24px Arial, "Microsoft YaHei", sans-serif';
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                            ctx.lineWidth = 2;
+                            
+                            // 计算文字位置（右下角）
+                            const textMetrics = ctx.measureText(watermarkText);
+                            const margin = 20;
+                            const x = canvas.width - textMetrics.width - margin;
+                            const y = canvas.height - margin;
+                            
+                            // 绘制文字阴影背景
+                            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                            ctx.fillRect(x - 10, y - 30, textMetrics.width + 20, 35);
+                            
+                            // 绘制文字（描边+填充）
+                            ctx.strokeText(watermarkText, x, y);
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                            ctx.fillText(watermarkText, x, y);
+                            
+                            // 转换为blob并下载
+                            canvas.toBlob((blob) => {
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `card_${currentCardId}.png`;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                window.URL.revokeObjectURL(url);
+                                
+                                const successMsg = document.createElement('div');
+                                successMsg.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #4caf50; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 10000; font-size: 14px;';
+                                successMsg.textContent = '✓ 卡片已保存到本地（带水印）！';
+                                document.body.appendChild(successMsg);
+                                setTimeout(() => {
+                                    successMsg.style.opacity = '0';
+                                    successMsg.style.transition = 'opacity 0.3s';
+                                    setTimeout(() => document.body.removeChild(successMsg), 300);
+                                }, 2000);
+                                
+                                resolve();
+                            }, 'image/png');
+                        })
+                        .catch(reject);
+                    };
+                    image.onerror = reject;
+                    image.src = imgUrl;
                 });
 
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || '下载失败');
-                }
-
-                // 获取图片blob
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `card_${currentCardId}.jpg`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-
-                // 显示成功提示
                 const successMsg = document.createElement('div');
                 successMsg.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #4caf50; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 10000; font-size: 14px;';
                 successMsg.textContent = '✓ 卡片已保存到本地！';
@@ -627,13 +750,6 @@
             setTimeout(() => {
                 errorDiv.classList.remove('show');
             }, 3000);
-        }
-
-        // 退出登录
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login.html';
         }
 
         // 点击弹窗外部关闭

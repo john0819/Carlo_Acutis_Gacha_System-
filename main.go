@@ -49,6 +49,7 @@ func main() {
 	// 需要认证的接口（限流 + JWT认证）
 	http.HandleFunc("/api/user/profile", withAuthAndRateLimit(handlers.GetProfile))
 	http.HandleFunc("/api/user/profile/update", withAuthAndRateLimit(handlers.UpdateProfile))
+	http.HandleFunc("/api/user/checkin-history", withAuthAndRateLimit(handlers.GetCheckinHistory))
 	http.HandleFunc("/api/draw/check", withAuthAndRateLimit(handlers.CheckTodayDraw))
 	http.HandleFunc("/api/draw", withAuthAndRateLimit(handlers.DrawCard))
 	http.HandleFunc("/api/user/cards", withAuthAndRateLimit(handlers.GetUserCards))
@@ -59,6 +60,9 @@ func main() {
 	http.HandleFunc("/api/redemption-info", withAuthAndRateLimit(handlers.GetRedemptionInfo))
 	http.HandleFunc("/api/feedback", withAuthAndRateLimit(handlers.SubmitFeedback))
 	http.HandleFunc("/api/feedbacks", withAuthAndRateLimit(handlers.GetFeedbacks))
+	http.HandleFunc("/api/location-setting", withAuthAndRateLimit(handlers.GetLocationSetting))
+	http.HandleFunc("/api/checkin-locations", withAuthAndRateLimit(handlers.GetCheckinLocations))
+	http.HandleFunc("/api/user/location-checkins", withAuthAndRateLimit(handlers.GetUserLocationCheckins))
 
 	// 图片目录
 	imageFs := http.FileServer(http.Dir("./images"))

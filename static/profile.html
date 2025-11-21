@@ -3,8 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>个人资料 - 抽卡WebApp</title>
+    <title>个人资料 - 一步一步都有祝福</title>
     <style>
+        :root {
+            --primary-color: #1a237e;
+            --accent-color: #ffd700;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,62 +21,106 @@
         body {
             width: 100%;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-color);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             padding: 20px;
+            padding-top: 70px;
             position: relative;
         }
 
-        body::before {
-            content: '';
+        .header {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px;
-            height: 300px;
-            z-index: 0;
-            pointer-events: none;
-            background-image: 
-                linear-gradient(to right, transparent 48%, rgba(255,255,255,0.03) 48%, rgba(255,255,255,0.03) 52%, transparent 52%),
-                linear-gradient(to bottom, transparent 48%, rgba(255,255,255,0.03) 48%, rgba(255,255,255,0.03) 52%, transparent 52%);
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            height: 60px;
+            padding: 0 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #283593;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 35, 126, 0.3);
         }
 
         .container {
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             position: relative;
             z-index: 1;
         }
 
         h1 {
             text-align: center;
-            color: #333;
+            color: var(--primary-color);
             margin-bottom: 30px;
+            font-size: 24px;
         }
 
         .info-card {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border-top: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
         }
 
         .info-card h3 {
-            color: #667eea;
-            margin-bottom: 15px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
             font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .stat-item {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e0e0e0;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
         }
 
         .stat-item:last-child {
@@ -78,11 +129,36 @@
 
         .stat-label {
             color: #666;
+            font-size: 14px;
         }
 
         .stat-value {
-            color: #333;
+            color: var(--primary-color);
             font-weight: 600;
+            font-size: 18px;
+        }
+
+        .stat-value-large {
+            font-size: 24px;
+            color: var(--accent-color);
+        }
+
+        .calendar-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #283593 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .calendar-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 35, 126, 0.3);
         }
 
         .form-group {
@@ -94,37 +170,40 @@
             margin-bottom: 8px;
             color: #555;
             font-size: 14px;
+            font-weight: 500;
         }
 
         input {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
         }
 
         input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.1);
         }
 
         .btn {
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 14px 30px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #283593 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s;
             margin-right: 10px;
         }
 
         .btn:hover {
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 35, 126, 0.3);
         }
 
         .btn-secondary {
@@ -139,8 +218,8 @@
         .error {
             background: #fee;
             color: #c33;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 8px;
             margin-bottom: 15px;
             font-size: 14px;
             display: none;
@@ -153,8 +232,8 @@
         .success {
             background: #efe;
             color: #3c3;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 8px;
             margin-bottom: 15px;
             font-size: 14px;
             display: none;
@@ -164,85 +243,249 @@
             display: block;
         }
 
-        .nav {
-            text-align: center;
-            margin-top: 20px;
-            display: flex;
-            flex-wrap: wrap;
+        /* 日历弹窗 */
+        .calendar-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
             justify-content: center;
-            gap: 10px;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
         }
 
-        .nav a {
-            color: white;
-            text-decoration: none;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            display: inline-block;
-            white-space: nowrap;
+        .calendar-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
         }
 
-        /* 移动端响应式 */
-        @media (max-width: 480px) {
-            .nav {
-                flex-direction: column;
-                align-items: center;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .calendar-content {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.3s ease-out;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
             }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-            .nav a {
-                width: 80%;
-                margin: 5px 0;
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .close-calendar {
+            background: #f0f0f0;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .close-calendar:hover {
+            background: #e0e0e0;
+            transform: rotate(90deg);
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-nav-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        .calendar-nav-btn:hover {
+            background: #283593;
+            transform: scale(1.1);
+        }
+
+        .calendar-month {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #999;
+            padding: 8px 0;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8f9fa;
+            color: #666;
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+
+        .calendar-day.today {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.checked {
+            background: var(--accent-color);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+        }
+
+        .calendar-day:hover:not(.other-month) {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .calendar-stats {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        @media (max-width: 480px) {
+            .calendar-content {
+                padding: 20px;
+            }
+            .calendar-day {
+                font-size: 12px;
             }
         }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>👤 个人资料</h1>
+        <a href="/index.html" class="back-btn">← 返回</a>
+    </div>
+
     <div class="container">
-        <h1>个人资料</h1>
-        
         <div class="error" id="error"></div>
         <div class="success" id="success"></div>
 
         <div class="info-card">
-            <h3>账号信息</h3>
+            <h3>📊 账号信息</h3>
             <div class="stat-item">
                 <span class="stat-label">用户名</span>
                 <span class="stat-value" id="username">-</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">累计打卡次数</span>
-                <span class="stat-value" id="checkinCount">0</span>
+                <span class="stat-value stat-value-large" id="checkinCount">0</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">兑换点</span>
                 <span class="stat-value" id="exchangePoints">0</span>
             </div>
+            <button class="calendar-btn" onclick="showCalendar()">📅 查看打卡日历</button>
         </div>
 
-        <form id="profileForm">
-            <div class="form-group">
-                <label for="holyName">圣名</label>
-                <input type="text" id="holyName" placeholder="请输入圣名">
-            </div>
-            <div class="form-group">
-                <label for="nickname">昵称</label>
-                <input type="text" id="nickname" placeholder="请输入昵称">
-            </div>
-            <div class="form-group">
-                <label for="birthday">生日</label>
-                <input type="date" id="birthday">
-            </div>
-            <div class="btn-group">
-                <button type="submit" class="btn">保存</button>
-                <button type="button" class="btn btn-secondary" onclick="window.location.href='/index.html'">返回</button>
-            </div>
-        </form>
+        <div class="info-card">
+            <h3>✏️ 个人信息</h3>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="holyName">圣名</label>
+                    <input type="text" id="holyName" placeholder="请输入圣名">
+                </div>
+                <div class="form-group">
+                    <label for="nickname">昵称</label>
+                    <input type="text" id="nickname" placeholder="请输入昵称">
+                </div>
+                <div class="form-group">
+                    <label for="birthday">生日</label>
+                    <input type="date" id="birthday">
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn">保存</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/index.html'">返回</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-        <div class="nav">
-            <a href="/index.html">返回主页</a>
-            <a href="/collection.html">我的卡包</a>
-            <a href="#" onclick="logout()">退出登录</a>
+    <!-- 打卡日历弹窗 -->
+    <div class="calendar-modal" id="calendarModal">
+        <div class="calendar-content">
+            <div class="calendar-header">
+                <div class="calendar-title">📅 打卡日历</div>
+                <button class="close-calendar" onclick="closeCalendar()">×</button>
+            </div>
+            <div class="calendar-nav">
+                <button class="calendar-nav-btn" onclick="changeMonth(-1)">‹</button>
+                <div class="calendar-month" id="calendarMonth"></div>
+                <button class="calendar-nav-btn" onclick="changeMonth(1)">›</button>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="calendar-stats" id="calendarStats"></div>
         </div>
     </div>
 
@@ -251,6 +494,9 @@
         if (!token) {
             window.location.href = '/login.html';
         }
+
+        let checkinDates = [];
+        let currentCalendarDate = new Date();
 
         // 加载用户信息
         async function loadProfile() {
@@ -289,6 +535,24 @@
             }
         }
 
+        // 加载打卡历史
+        async function loadCheckinHistory() {
+            try {
+                const response = await fetch('/api/user/checkin-history', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    checkinDates = data.dates || [];
+                }
+            } catch (error) {
+                console.error('加载打卡历史失败:', error);
+            }
+        }
+
         // 更新资料
         document.getElementById('profileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -324,6 +588,112 @@
             }
         });
 
+        // 显示日历
+        function showCalendar() {
+            document.getElementById('calendarModal').classList.add('show');
+            renderCalendar();
+        }
+
+        // 关闭日历
+        function closeCalendar() {
+            document.getElementById('calendarModal').classList.remove('show');
+        }
+
+        // 切换月份
+        function changeMonth(delta) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        // 渲染日历
+        function renderCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            // 更新月份显示
+            const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
+                               '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            document.getElementById('calendarMonth').textContent = `${year}年 ${monthNames[month]}`;
+
+            // 获取当月第一天和最后一天
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const firstDayWeek = firstDay.getDay();
+            const daysInMonth = lastDay.getDate();
+
+            // 获取上个月的最后几天
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // 星期标题
+            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+            weekDays.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+
+            // 上个月的日期
+            for (let i = firstDayWeek - 1; i >= 0; i--) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day other-month';
+                day.textContent = prevMonthLastDay - i;
+                grid.appendChild(day);
+            }
+
+            // 当月的日期
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                // 检查是否是今天
+                if (dateStr === todayStr) {
+                    dayEl.classList.add('today');
+                }
+                
+                // 检查是否打过卡
+                if (checkinDates.includes(dateStr)) {
+                    dayEl.classList.add('checked');
+                }
+                
+                dayEl.textContent = day;
+                grid.appendChild(dayEl);
+            }
+
+            // 下个月的日期（填充到42个格子）
+            const totalCells = grid.children.length;
+            const remainingCells = 42 - totalCells;
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day other-month';
+                dayEl.textContent = day;
+                grid.appendChild(dayEl);
+            }
+
+            // 更新统计信息
+            const thisMonthDates = checkinDates.filter(date => {
+                const dateObj = new Date(date);
+                return dateObj.getFullYear() === year && dateObj.getMonth() === month;
+            });
+            document.getElementById('calendarStats').textContent = 
+                `本月打卡 ${thisMonthDates.length} 天 | 总计打卡 ${checkinDates.length} 天`;
+        }
+
+        // 点击日历外部关闭
+        document.getElementById('calendarModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCalendar();
+            }
+        });
+
         function showError(message) {
             const errorDiv = document.getElementById('error');
             errorDiv.textContent = message;
@@ -338,15 +708,11 @@
             setTimeout(() => successDiv.classList.remove('show'), 3000);
         }
 
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login.html';
-        }
-
-        // 页面加载时获取用户信息
-        loadProfile();
+        // 页面加载时获取用户信息和打卡历史
+        window.addEventListener('load', async function() {
+            await loadProfile();
+            await loadCheckinHistory();
+        });
     </script>
 </body>
 </html>
-

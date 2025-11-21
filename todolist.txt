@@ -170,6 +170,7 @@ todo:
 2. 领取奖品地点替换
 3. 数据库持久化 -- 后续可以替换
 4. 成就和兑换条件替换芯的
+5. 重新部署新版本以后 数据迁移
 
 futures:
 1. 获取服务器上的数据库、查询之类的
@@ -177,3 +178,25 @@ futures:
 
 bug:
 1. 抽卡以后图片加载失败
+
+
+位置定位打开关闭：
+# 启用位置校验
+./scripts/toggle_location.sh on
+
+# 禁用位置校验（测试模式）
+./scripts/toggle_location.sh off
+
+定位地点查看：
+./scripts/manage_locations.sh list
+
+新增定位地方：
+./scripts/manage_locations.sh add '地点名称' 纬度 经度 [半径] [成就代码]
+./scripts/manage_locations.sh add '罗源南门堂' 26.123456 119.123456 500 location_a_15
+
+更新定位地方：
+./scripts/manage_locations.sh update <ID> '新名称' 新纬度 新经度 [半径] [成就代码]
+./scripts/manage_locations.sh update 3 '测试' 26.123456 119.123456 500 location_a_15
+
+删除：
+./scripts/manage_locations.sh delete 3

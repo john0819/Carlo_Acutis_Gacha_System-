@@ -258,3 +258,42 @@ func getUserByID(userID int) *models.User {
 	}
 	return &user
 }
+
+// GetCheckinHistory 获取用户打卡历史记录
+func GetCheckinHistory(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		sendError(w, "方法不允许", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, err := auth.GetUserIDFromRequest(r)
+	if err != nil {
+		sendError(w, "未授权", http.StatusUnauthorized)
+		return
+	}
+
+	// 查询用户所有打卡记录
+	rows, err := database.DB.Query(
+		"SELECT draw_date FROM daily_draws WHERE user_id = $1 ORDER BY draw_date DESC",
+		userID,
+	)
+	if err != nil {
+		sendError(w, "查询打卡记录失败", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var dates []string
+	for rows.Next() {
+		var drawDate time.Time
+		if err := rows.Scan(&drawDate); err != nil {
+			continue
+		}
+		dates = append(dates, drawDate.Format("2006-01-02"))
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"dates": dates,
+	})
+}

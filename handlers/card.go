@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -38,7 +39,19 @@ func CheckTodayDraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	today := time.Now().Format("2006-01-02")
+	// 使用北京时间，下午4点为分界点
+	beijingLocation, _ := time.LoadLocation("Asia/Shanghai")
+	nowBeijing := time.Now().In(beijingLocation)
+
+	// 如果当前时间在下午4点之前，使用昨天的日期；否则使用今天的日期
+	var today string
+	if nowBeijing.Hour() < 16 {
+		yesterday := nowBeijing.AddDate(0, 0, -1)
+		today = yesterday.Format("2006-01-02")
+	} else {
+		today = nowBeijing.Format("2006-01-02")
+	}
+
 	var existingDraw models.DailyDraw
 	err = database.DB.QueryRow(
 		"SELECT id, user_id, card_id, draw_date, is_new_card FROM daily_draws WHERE user_id = $1 AND draw_date = $2",
@@ -91,8 +104,100 @@ func DrawCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 检查今天是否已经抽过卡
-	today := time.Now().Format("2006-01-02")
+	// 解析请求体（可能包含位置信息）
+	var drawReq models.DrawCardRequest
+	if r.Body != nil {
+		json.NewDecoder(r.Body).Decode(&drawReq)
+	}
+
+	// 检查是否启用位置校验
+	var locationCheckEnabled bool
+	err = database.DB.QueryRow(
+		"SELECT value = 'true' FROM system_config WHERE key = 'location_check_enabled'",
+	).Scan(&locationCheckEnabled)
+	if err != nil {
+		locationCheckEnabled = false // 默认关闭
+	}
+
+	// 如果启用了位置校验，验证位置
+	var validLocationID int
+	var savedLatitude, savedLongitude float64
+	if locationCheckEnabled {
+		if drawReq.Latitude == nil || drawReq.Longitude == nil {
+			sendError(w, "需要提供位置信息才能打卡", http.StatusBadRequest)
+			return
+		}
+
+		// 查找用户是否在允许的打卡地点范围内
+		var locationName string
+		var distance float64
+		err = database.DB.QueryRow(
+			`SELECT id, name, 
+			 	6371000 * acos(
+			 		cos(radians($1)) * cos(radians(latitude)) * 
+			 		cos(radians(longitude) - radians($2)) + 
+			 		sin(radians($1)) * sin(radians(latitude))
+			 	) as distance
+			 FROM checkin_locations 
+			 WHERE (
+			 	6371000 * acos(
+			 		cos(radians($1)) * cos(radians(latitude)) * 
+			 		cos(radians(longitude) - radians($2)) + 
+			 		sin(radians($1)) * sin(radians(latitude))
+			 	)
+			 ) <= radius_meters
+			 ORDER BY distance ASC
+			 LIMIT 1`,
+			*drawReq.Latitude, *drawReq.Longitude,
+		).Scan(&validLocationID, &locationName, &distance)
+
+		if err != nil {
+			// 获取所有地点名称
+			var locationNames []string
+			rows, _ := database.DB.Query("SELECT name FROM checkin_locations ORDER BY id")
+			if rows != nil {
+				defer rows.Close()
+				for rows.Next() {
+					var name string
+					if err := rows.Scan(&name); err == nil {
+						locationNames = append(locationNames, name)
+					}
+				}
+			}
+
+			// 构建地点名称列表
+			var locationsText string
+			if len(locationNames) > 0 {
+				locationsText = strings.Join(locationNames, "、")
+			} else {
+				locationsText = "指定地点"
+			}
+
+			sendError(w, fmt.Sprintf("您不在允许的打卡地点范围内，请在以下地点打卡：%s", locationsText), http.StatusForbidden)
+			return
+		}
+
+		// 保存位置信息用于后续记录
+		savedLatitude = *drawReq.Latitude
+		savedLongitude = *drawReq.Longitude
+	}
+
+	// 检查今天是否已经抽过卡（使用北京时间，下午4点为分界点）
+	// 获取北京时间
+	beijingLocation, _ := time.LoadLocation("Asia/Shanghai")
+	nowBeijing := time.Now().In(beijingLocation)
+
+	// 如果当前时间在下午4点之前，使用昨天的日期；否则使用今天的日期
+	var today string
+	if nowBeijing.Hour() < 16 {
+		// 下午4点之前，使用昨天的日期
+		yesterday := nowBeijing.AddDate(0, 0, -1)
+		today = yesterday.Format("2006-01-02")
+	} else {
+		// 下午4点之后，使用今天的日期
+		today = nowBeijing.Format("2006-01-02")
+	}
+
 	var existingDraw models.DailyDraw
 	err = database.DB.QueryRow(
 		"SELECT id, user_id, card_id, draw_date, is_new_card FROM daily_draws WHERE user_id = $1 AND draw_date = $2",
@@ -184,19 +289,19 @@ func DrawCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 抽卡逻辑：新卡70%，旧卡30%
+	// 抽卡逻辑：新卡90%，旧卡10%
 	var selectedCard models.Card
 	var isNewCard bool
 
 	rand.Seed(time.Now().UnixNano())
 	random := rand.Float64()
 
-	if random < 0.7 && len(newCards) > 0 {
-		// 70%概率抽新卡
+	if random < 0.9 && len(newCards) > 0 {
+		// 90%概率抽新卡
 		selectedCard = newCards[rand.Intn(len(newCards))]
 		isNewCard = true
 	} else if len(oldCards) > 0 {
-		// 30%概率或没有新卡时抽旧卡
+		// 10%概率或没有新卡时抽旧卡
 		selectedCard = oldCards[rand.Intn(len(oldCards))]
 		isNewCard = false
 	} else {
@@ -205,7 +310,8 @@ func DrawCard(w http.ResponseWriter, r *http.Request) {
 		isNewCard = true
 	}
 
-	// 记录每日抽卡
+	// 记录每日抽卡（使用北京时间，下午4点为分界点）
+	// 使用之前已经定义的today变量
 	_, err = database.DB.Exec(
 		"INSERT INTO daily_draws (user_id, card_id, draw_date, is_new_card) VALUES ($1, $2, $3, $4)",
 		userID, selectedCard.ID, today, isNewCard,
@@ -213,6 +319,16 @@ func DrawCard(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		sendError(w, "记录抽卡结果失败", http.StatusInternalServerError)
 		return
+	}
+
+	// 更新用户打卡次数（无论是否新卡都增加）
+	_, err = database.DB.Exec(
+		"UPDATE users SET checkin_count = checkin_count + 1 WHERE id = $1",
+		userID,
+	)
+	if err != nil {
+		// 记录错误但不影响返回结果
+		_ = err
 	}
 
 	// 如果是新卡，添加到用户卡包
@@ -227,14 +343,80 @@ func DrawCard(w http.ResponseWriter, r *http.Request) {
 			_ = err
 		}
 
-		// 更新用户打卡次数
-		_, _ = database.DB.Exec(
-			"UPDATE users SET checkin_count = checkin_count + 1 WHERE id = $1",
-			userID,
-		)
-
 		// 检查成就
 		newAchievements, _ = CheckAchievements(userID)
+	}
+
+	// 如果启用了位置校验且抽卡成功，记录地点打卡
+	if locationCheckEnabled && err == nil && validLocationID > 0 {
+		beijingLocation, _ := time.LoadLocation("Asia/Shanghai")
+		nowBeijing := time.Now().In(beijingLocation)
+		var checkinDate string
+		if nowBeijing.Hour() < 16 {
+			yesterday := nowBeijing.AddDate(0, 0, -1)
+			checkinDate = yesterday.Format("2006-01-02")
+		} else {
+			checkinDate = nowBeijing.Format("2006-01-02")
+		}
+
+		database.DB.Exec(
+			`INSERT INTO location_checkins (user_id, location_id, checkin_date, latitude, longitude) 
+			 VALUES ($1, $2, $3, $4, $5)
+			 ON CONFLICT (user_id, location_id, checkin_date) DO NOTHING`,
+			userID, validLocationID, checkinDate, savedLatitude, savedLongitude,
+		)
+
+		// 检查地点成就
+		var achievementCode string
+		err := database.DB.QueryRow(
+			"SELECT achievement_code FROM checkin_locations WHERE id = $1",
+			validLocationID,
+		).Scan(&achievementCode)
+		if err == nil && achievementCode != "" {
+			// 检查该地点打卡次数
+			var checkinCount int
+			database.DB.QueryRow(
+				"SELECT COUNT(*) FROM location_checkins WHERE user_id = $1 AND location_id = $2",
+				userID, validLocationID,
+			).Scan(&checkinCount)
+
+			if checkinCount >= 15 {
+				// 解锁地点成就
+				var achievementTypeID int
+				err = database.DB.QueryRow(
+					"SELECT id FROM achievement_types WHERE code = $1",
+					achievementCode,
+				).Scan(&achievementTypeID)
+				if err == nil {
+					// 检查是否已解锁
+					var exists bool
+					database.DB.QueryRow(
+						"SELECT EXISTS(SELECT 1 FROM user_achievements WHERE user_id = $1 AND achievement_type_id = $2)",
+						userID, achievementTypeID,
+					).Scan(&exists)
+
+					if !exists {
+						// 解锁并自动领取
+						database.DB.Exec(
+							"INSERT INTO user_achievements (user_id, achievement_type_id, unlocked_at, claimed_at) VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+							userID, achievementTypeID,
+						)
+
+						var rewardPoints int
+						database.DB.QueryRow(
+							"SELECT reward_points FROM achievement_types WHERE id = $1",
+							achievementTypeID,
+						).Scan(&rewardPoints)
+
+						// 增加兑换点
+						database.DB.Exec(
+							"UPDATE users SET exchange_points = exchange_points + $1 WHERE id = $2",
+							rewardPoints, userID,
+						)
+					}
+				}
+			}
+		}
 	}
 
 	message := "恭喜你抽到了新卡！"
@@ -483,8 +665,20 @@ func DownloadCardWithWatermark(w http.ResponseWriter, r *http.Request, cardID st
 	}
 
 	// 读取原始图片
+	// 处理图片路径：可能是 /images/card001.png 或 images/card001.png
 	imagePath := strings.TrimPrefix(card.ImageURL, "/images/")
+	imagePath = strings.TrimPrefix(imagePath, "images/")
 	fullPath := filepath.Join("./images", imagePath)
+
+	// 如果文件不存在，尝试直接使用image_url作为路径
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		// 尝试直接使用image_url
+		if strings.HasPrefix(card.ImageURL, "/") {
+			fullPath = "." + card.ImageURL
+		} else {
+			fullPath = "./" + card.ImageURL
+		}
+	}
 
 	file, err := os.Open(fullPath)
 	if err != nil {
@@ -520,7 +714,7 @@ func DownloadCardWithWatermark(w http.ResponseWriter, r *http.Request, cardID st
 	}
 }
 
-// addWatermark 在图片上添加文字水印
+// addWatermark 在图片上添加文字水印（使用简单方法，支持中文）
 func addWatermark(img image.Image, text string) (image.Image, error) {
 	bounds := img.Bounds()
 	rgba := image.NewRGBA(bounds)
@@ -528,22 +722,35 @@ func addWatermark(img image.Image, text string) (image.Image, error) {
 	// 复制原图
 	draw.Draw(rgba, bounds, img, bounds.Min, draw.Src)
 
-	// 使用basicfont绘制文字
-	face := basicfont.Face7x13
+	// 由于basicfont不支持中文，我们使用一个简单的方法：
+	// 在图片右下角绘制一个半透明的矩形，然后在上面绘制文字
+	// 这里我们使用ASCII字符或者简化处理
 
-	// 计算文字宽度和高度
-	textWidth := len(text) * 7 // basicfont.Face7x13 每个字符约7像素宽
-	textHeight := 13           // basicfont.Face7x13 高度约13像素
-
+	// 如果文本包含中文字符，使用简化处理
 	// 计算文字位置（右下角，留出边距）
-	margin := 15
+	margin := 20
+	textHeight := 20
+	// 估算文本宽度（中文字符按16像素宽度计算，英文字符按8像素）
+	textWidth := 0
+	for _, r := range text {
+		if r < 128 {
+			textWidth += 8 // ASCII字符
+		} else {
+			textWidth += 16 // 中文字符
+		}
+	}
+
 	x := bounds.Max.X - textWidth - margin
 	y := bounds.Max.Y - margin
 
 	// 先绘制半透明黑色背景，让文字更清晰
-	bgRect := image.Rect(x-5, y-textHeight-2, x+textWidth+5, y+3)
-	bgColor := color.RGBA{R: 0, G: 0, B: 0, A: 180}
+	bgRect := image.Rect(x-10, y-textHeight-5, bounds.Max.X-5, bounds.Max.Y-5)
+	bgColor := color.RGBA{R: 0, G: 0, B: 0, A: 200}
 	draw.Draw(rgba, bgRect, &image.Uniform{bgColor}, image.Point{}, draw.Over)
+
+	// 使用basicfont绘制文字（如果包含中文，会显示为方块，但至少功能可用）
+	// 更好的方案是使用truetype字体，但需要额外的字体文件
+	face := basicfont.Face7x13
 
 	// 绘制白色文字
 	d := &font.Drawer{

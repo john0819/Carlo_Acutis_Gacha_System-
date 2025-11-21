@@ -677,25 +677,28 @@
                             }
                             if (!watermarkText) watermarkText = '我的卡片';
                             
-                            // 设置字体样式
-                            ctx.font = 'bold 24px Arial, "Microsoft YaHei", sans-serif';
-                            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-                            ctx.lineWidth = 2;
+                            // 根据图片大小动态计算字体大小（最小36px，最大60px）
+                            const baseFontSize = Math.max(36, Math.min(60, Math.floor(canvas.width / 20)));
+                            ctx.font = `bold ${baseFontSize}px Arial, "Microsoft YaHei", "PingFang SC", sans-serif`;
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                            ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+                            ctx.lineWidth = 3;
                             
-                            // 计算文字位置（右下角）
+                            // 计算文字位置（右下角，但留更多边距）
                             const textMetrics = ctx.measureText(watermarkText);
-                            const margin = 20;
+                            const margin = Math.max(30, Math.floor(canvas.width / 30));
+                            const padding = 15;
                             const x = canvas.width - textMetrics.width - margin;
                             const y = canvas.height - margin;
                             
-                            // 绘制文字阴影背景
-                            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-                            ctx.fillRect(x - 10, y - 30, textMetrics.width + 20, 35);
+                            // 绘制文字阴影背景（更大更显眼）
+                            const bgHeight = baseFontSize + padding * 2;
+                            ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+                            ctx.fillRect(x - padding, y - bgHeight + padding, textMetrics.width + padding * 2, bgHeight);
                             
-                            // 绘制文字（描边+填充）
+                            // 绘制文字（描边+填充，更粗的描边）
                             ctx.strokeText(watermarkText, x, y);
-                            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                            ctx.fillStyle = 'rgba(255, 255, 255, 1)';
                             ctx.fillText(watermarkText, x, y);
                             
                             // 转换为blob并下载

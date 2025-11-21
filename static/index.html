@@ -833,18 +833,48 @@
         // ==================== 图片加载 ====================
         async function loadRandomImage() {
             const wrapper = document.getElementById('imageWrapper');
+            wrapper.innerHTML = '<div style="color: #999; padding: 40px;">加载图片中...</div>';
+            
             try {
                 const response = await fetch('/images/list.json');
-                    if (response.ok) {
+                if (response.ok) {
                     const data = await response.json();
                     const list = data.images || [];
                     if (list.length > 0) {
                         const randomImg = list[Math.floor(Math.random() * list.length)];
-                        wrapper.innerHTML = `<img src="${randomImg}" alt="Preview">`;
+                        const img = document.createElement('img');
+                        img.src = randomImg;
+                        img.style.maxWidth = '100%';
+                        img.style.maxHeight = '300px';
+                        img.style.objectFit = 'contain';
+                        img.style.borderRadius = '12px';
+                        
+                        img.onload = function() {
+                            wrapper.innerHTML = '';
+                            wrapper.appendChild(img);
+                        };
+                        
+                        img.onerror = function() {
+                            // 如果图片加载失败，尝试加载另一张
+                            if (list.length > 1) {
+                                const retryImg = list[Math.floor(Math.random() * list.length)];
+                                if (retryImg !== randomImg) {
+                                    img.src = retryImg;
+                                } else {
+                                    wrapper.innerHTML = '<div style="color: #999; padding: 40px;">图片加载失败，请稍后重试</div>';
+                                }
+                            } else {
+                                wrapper.innerHTML = '<div style="color: #999; padding: 40px;">图片加载失败，请稍后重试</div>';
+                            }
+                        };
+                    } else {
+                        wrapper.innerHTML = '<div style="color: #999; padding: 40px;">暂无预览图片</div>';
                     }
-                    }
-                } catch (e) {
-                wrapper.innerHTML = '<div>无法加载预览</div>';
+                } else {
+                    wrapper.innerHTML = '<div style="color: #999; padding: 40px;">无法加载图片列表</div>';
+                }
+            } catch (e) {
+                wrapper.innerHTML = '<div style="color: #999; padding: 40px;">无法加载预览</div>';
             }
         }
 
@@ -1051,9 +1081,25 @@
                     
                     if (data.has_drawn) {
                         setDrawnState();
-                        if (data.card) {
+                        if (data.card && data.card.image_url) {
                             const wrapper = document.getElementById('imageWrapper');
-                            wrapper.innerHTML = `<img src="${data.card.image_url}" alt="Today Card">`;
+                            const img = document.createElement('img');
+                            img.src = data.card.image_url;
+                            img.style.maxWidth = '100%';
+                            img.style.maxHeight = '300px';
+                            img.style.objectFit = 'contain';
+                            img.style.borderRadius = '12px';
+                            
+                            img.onload = function() {
+                                wrapper.innerHTML = '';
+                                wrapper.appendChild(img);
+                            };
+                            
+                            img.onerror = function() {
+                                wrapper.innerHTML = '<div style="color: #999; padding: 40px;">今日卡片图片加载失败</div>';
+                            };
+                        } else {
+                            loadRandomImage();
                         }
                     } else {
                         loadRandomImage();

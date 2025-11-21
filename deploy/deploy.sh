@@ -40,6 +40,7 @@ echo ""
 echo "📋 步骤3: 复制文件..."
 sudo cp h5project $PROJECT_DIR/
 sudo cp -r static/* $PROJECT_DIR/static/
+sudo mkdir -p $PROJECT_DIR/images
 sudo cp -r images/* $PROJECT_DIR/images/ 2>/dev/null || true
 sudo cp docker-compose.yml $PROJECT_DIR/ 2>/dev/null || true
 sudo cp deploy/docker-compose.prod.yml $PROJECT_DIR/ 2>/dev/null || true
@@ -51,6 +52,21 @@ sudo cp -r scripts/* $PROJECT_DIR/scripts/ 2>/dev/null || true
 sudo chmod +x $PROJECT_DIR/h5project
 [ -f $PROJECT_DIR/*.sh ] && sudo chmod +x $PROJECT_DIR/*.sh 2>/dev/null || true
 [ -d $PROJECT_DIR/scripts ] && sudo chmod +x $PROJECT_DIR/scripts/*.sh 2>/dev/null || true
+
+# 3.5 生成 list.json 文件（如果图片目录存在）
+echo ""
+echo "📝 步骤3.5: 生成图片列表文件..."
+if [ -d "$PROJECT_DIR/images" ] && [ -f "$PROJECT_DIR/scripts/generate_list_json.sh" ]; then
+    cd $PROJECT_DIR
+    sudo chmod +x scripts/generate_list_json.sh
+    sudo -E scripts/generate_list_json.sh || echo "⚠️  生成list.json失败，继续部署..."
+    # 确保list.json权限正确
+    sudo chmod 644 $PROJECT_DIR/images/list.json 2>/dev/null || true
+    echo "✅ 图片列表文件生成完成"
+else
+    echo "⚠️  跳过生成list.json（图片目录或脚本不存在）"
+fi
+
 echo "✅ 文件复制完成"
 
 # 4. 配置systemd服务

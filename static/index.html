@@ -786,8 +786,12 @@
 
         function openDrawModal() { 
             openModal('drawModal'); 
-            if (!document.querySelector('#imageWrapper img')) {
-                loadRandomImage();
+            // 每次打开弹窗都重新检查状态
+            const wrapper = document.getElementById('imageWrapper');
+            if (wrapper) {
+                // 先清空内容，然后检查今日状态
+                wrapper.innerHTML = '';
+                checkTodayStatus();
             }
         }
         function closeDrawModal() { closeModal('drawModal'); }
@@ -817,7 +821,7 @@
         async function loadDailyQuote() {
             try {
                 const response = await fetch('/api/daily-quote');
-                if (response.ok) {
+                    if (response.ok) {
                     const data = await response.json();
                     document.getElementById('quoteText').textContent = data.quote;
                     const date = new Date();
@@ -833,48 +837,76 @@
         // ==================== 图片加载 ====================
         async function loadRandomImage() {
             const wrapper = document.getElementById('imageWrapper');
-            wrapper.innerHTML = '<div style="color: #999; padding: 40px;">加载图片中...</div>';
+            if (!wrapper) return;
+            
+            wrapper.innerHTML = '<div style="color: #999; padding: 40px; text-align: center;">🖼️ 加载预览图片中...</div>';
             
             try {
                 const response = await fetch('/images/list.json');
-                if (response.ok) {
-                    const data = await response.json();
-                    const list = data.images || [];
-                    if (list.length > 0) {
-                        const randomImg = list[Math.floor(Math.random() * list.length)];
-                        const img = document.createElement('img');
-                        img.src = randomImg;
-                        img.style.maxWidth = '100%';
-                        img.style.maxHeight = '300px';
-                        img.style.objectFit = 'contain';
-                        img.style.borderRadius = '12px';
-                        
-                        img.onload = function() {
-                            wrapper.innerHTML = '';
-                            wrapper.appendChild(img);
-                        };
-                        
-                        img.onerror = function() {
-                            // 如果图片加载失败，尝试加载另一张
-                            if (list.length > 1) {
-                                const retryImg = list[Math.floor(Math.random() * list.length)];
-                                if (retryImg !== randomImg) {
-                                    img.src = retryImg;
-                                } else {
-                                    wrapper.innerHTML = '<div style="color: #999; padding: 40px;">图片加载失败，请稍后重试</div>';
-                                }
-                            } else {
-                                wrapper.innerHTML = '<div style="color: #999; padding: 40px;">图片加载失败，请稍后重试</div>';
-                            }
-                        };
-                    } else {
-                        wrapper.innerHTML = '<div style="color: #999; padding: 40px;">暂无预览图片</div>';
-                    }
-                } else {
-                    wrapper.innerHTML = '<div style="color: #999; padding: 40px;">无法加载图片列表</div>';
+                if (!response.ok) {
+                    wrapper.innerHTML = '<div style="color: #999; padding: 40px; text-align: center;">⚠️ 无法加载图片列表</div>';
+                    return;
                 }
+                
+                const data = await response.json();
+                const list = data.images || [];
+                
+                if (list.length === 0) {
+                    wrapper.innerHTML = '<div style="color: #999; padding: 40px; text-align: center;">📭 暂无预览图片</div>';
+                    return;
+                }
+                
+                // 尝试加载图片，最多重试3次
+                let attempts = 0;
+                const maxAttempts = Math.min(3, list.length);
+                const triedImages = new Set();
+                
+                const tryLoadImage = () => {
+                    if (attempts >= maxAttempts) {
+                        wrapper.innerHTML = '<div style="color: #999; padding: 40px; text-align: center;">⚠️ 图片加载失败，请刷新页面重试</div>';
+                return;
+            }
+
+                    attempts++;
+                    
+                    // 从未尝试的图片中随机选择
+                    const availableImages = list.filter(img => !triedImages.has(img));
+                    if (availableImages.length === 0) {
+                        wrapper.innerHTML = '<div style="color: #999; padding: 40px; text-align: center;">⚠️ 所有图片加载失败</div>';
+                        return;
+                    }
+                    
+                    const randomIndex = Math.floor(Math.random() * availableImages.length);
+                    const selectedImg = availableImages[randomIndex];
+                    triedImages.add(selectedImg);
+                    
+                    const img = document.createElement('img');
+                    img.src = selectedImg;
+                img.style.maxWidth = '100%';
+                    img.style.maxHeight = '300px';
+                img.style.objectFit = 'contain';
+                    img.style.borderRadius = '12px';
+                    img.style.display = 'block';
+                    img.style.margin = '0 auto';
+                    
+                    img.onload = function() {
+                        wrapper.innerHTML = '';
+                        wrapper.appendChild(img);
+                    };
+                    
+            img.onerror = function() {
+                        // 延迟重试，避免立即重试
+                        setTimeout(() => {
+                            tryLoadImage();
+                        }, 500);
+                    };
+                };
+                
+                tryLoadImage();
+                
             } catch (e) {
-                wrapper.innerHTML = '<div style="color: #999; padding: 40px;">无法加载预览</div>';
+                console.error('加载预览图片失败:', e);
+                wrapper.innerHTML = '<div style="color: #999; padding: 40px; text-align: center;">⚠️ 无法加载预览，请检查网络连接</div>';
             }
         }
 
@@ -1001,11 +1033,47 @@
         function setDrawnState() {
             const btn = document.getElementById('drawBtn');
             const countdownBox = document.getElementById('countdownContainer');
+            const wrapper = document.getElementById('imageWrapper');
             
             btn.disabled = true;
             btn.textContent = "✅ 今日已完成打卡";
             countdownBox.style.display = 'flex';
             startCountdown();
+            
+            // 更新图片显示：重新获取今日卡片信息并显示
+            if (wrapper) {
+                wrapper.innerHTML = '<div style="color: #999; padding: 40px; text-align: center;">🖼️ 加载今日卡片中...</div>';
+                
+                // 重新获取今日卡片信息
+                fetch('/api/draw/check', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.has_drawn && data.card && data.card.image_url) {
+                        const img = document.createElement('img');
+                        img.src = data.card.image_url;
+                        img.style.maxWidth = '100%';
+                        img.style.maxHeight = '300px';
+                        img.style.objectFit = 'contain';
+                        img.style.borderRadius = '12px';
+                        img.style.display = 'block';
+                        img.style.margin = '0 auto';
+                        
+                        img.onload = function() {
+                            wrapper.innerHTML = '';
+                            wrapper.appendChild(img);
+                        };
+                        
+                        img.onerror = function() {
+                            wrapper.innerHTML = '<div style="color: #999; padding: 40px; text-align: center;">⚠️ 今日卡片图片加载失败</div>';
+                        };
+                    }
+                })
+                .catch(err => {
+                    console.error('获取今日卡片失败:', err);
+                });
+            }
         }
 
         // ==================== 倒计时 ====================
@@ -1083,26 +1151,50 @@
                         setDrawnState();
                         if (data.card && data.card.image_url) {
                             const wrapper = document.getElementById('imageWrapper');
-                            const img = document.createElement('img');
-                            img.src = data.card.image_url;
-                            img.style.maxWidth = '100%';
-                            img.style.maxHeight = '300px';
-                            img.style.objectFit = 'contain';
-                            img.style.borderRadius = '12px';
-                            
-                            img.onload = function() {
-                                wrapper.innerHTML = '';
-                                wrapper.appendChild(img);
-                            };
-                            
-                            img.onerror = function() {
-                                wrapper.innerHTML = '<div style="color: #999; padding: 40px;">今日卡片图片加载失败</div>';
-                            };
+                            if (wrapper) {
+                                wrapper.innerHTML = '<div style="color: #999; padding: 40px; text-align: center;">🖼️ 加载今日卡片中...</div>';
+                                
+                                const img = document.createElement('img');
+                                img.src = data.card.image_url;
+                                img.style.maxWidth = '100%';
+                                img.style.maxHeight = '300px';
+                                img.style.objectFit = 'contain';
+                                img.style.borderRadius = '12px';
+                                img.style.display = 'block';
+                                img.style.margin = '0 auto';
+                                
+                                // 添加超时处理
+                                const timeoutId = setTimeout(() => {
+                                    if (wrapper.innerHTML.includes('加载今日卡片中')) {
+                                        wrapper.innerHTML = '<div style="color: #999; padding: 40px; text-align: center;">⚠️ 图片加载超时</div>';
+                                    }
+                                }, 10000); // 10秒超时
+                                
+                                img.onload = function() {
+                                    clearTimeout(timeoutId);
+                                    wrapper.innerHTML = '';
+                                    wrapper.appendChild(img);
+                                };
+                                
+                                img.onerror = function() {
+                                    clearTimeout(timeoutId);
+                                    console.error('今日卡片图片加载失败:', data.card.image_url);
+                                    wrapper.innerHTML = '<div style="color: #999; padding: 40px; text-align: center;">⚠️ 今日卡片图片加载失败</div>';
+                                };
+                            }
                         } else {
-                            loadRandomImage();
+                            // 如果没有卡片信息，保持空白
+                            const wrapper = document.getElementById('imageWrapper');
+                            if (wrapper) {
+                                wrapper.innerHTML = '';
+                            }
                         }
                     } else {
-                        loadRandomImage();
+                        // 还没打卡，保持空白（不显示预览图）
+                        const wrapper = document.getElementById('imageWrapper');
+                        if (wrapper) {
+                            wrapper.innerHTML = '';
+                        }
                     }
                 }
             } catch (e) {

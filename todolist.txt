@@ -200,3 +200,10 @@ bug:
 
 删除：
 ./scripts/manage_locations.sh delete 3
+
+
+服务端启动：ip -- 47.111.226.140
+部署：
+./deploy/deploy.sh
+获取二维码：
+http://47.111.226.140/qrcode.html

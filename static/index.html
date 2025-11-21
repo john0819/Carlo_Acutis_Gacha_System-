@@ -1051,11 +1051,11 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.has_drawn && data.card && data.card.image_url) {
-                        const img = document.createElement('img');
+            const img = document.createElement('img');
                         img.src = data.card.image_url;
-                        img.style.maxWidth = '100%';
+            img.style.maxWidth = '100%';
                         img.style.maxHeight = '300px';
-                        img.style.objectFit = 'contain';
+            img.style.objectFit = 'contain';
                         img.style.borderRadius = '12px';
                         img.style.display = 'block';
                         img.style.margin = '0 auto';

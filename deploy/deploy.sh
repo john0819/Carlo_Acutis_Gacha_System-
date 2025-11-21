@@ -17,9 +17,13 @@ if [ ! -d "/etc/nginx" ]; then
     exit 1
 fi
 
+# 获取项目根目录的绝对路径
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 # 1. 编译Go程序
 echo "📦 步骤1: 编译Go程序..."
-cd "$(dirname "$0")/.."
+cd "$ROOT_DIR"
 go build -o h5project main.go
 if [ ! -f "h5project" ]; then
     echo "❌ 编译失败"
@@ -35,20 +39,36 @@ sudo mkdir -p $PROJECT_DIR/static
 sudo mkdir -p $PROJECT_DIR/images
 echo "✅ 目录创建完成"
 
-# 3. 复制文件
+# 3. 停止服务（如果正在运行）
 echo ""
-echo "📋 步骤3: 复制文件..."
-sudo cp h5project $PROJECT_DIR/
-sudo cp -r static/* $PROJECT_DIR/static/
+echo "🛑 步骤3: 停止服务（如果正在运行）..."
+if sudo systemctl is-active --quiet $SERVICE_NAME 2>/dev/null; then
+    echo "   服务正在运行，正在停止..."
+    sudo systemctl stop $SERVICE_NAME
+    sleep 2
+    echo "✅ 服务已停止"
+else
+    echo "   服务未运行，跳过"
+fi
+
+# 确保没有残留进程
+sudo pkill -f "$PROJECT_DIR/h5project" 2>/dev/null || true
+sleep 1
+
+# 4. 复制文件
+echo ""
+echo "📋 步骤4: 复制文件..."
+sudo cp "$ROOT_DIR/h5project" $PROJECT_DIR/
+sudo cp -r "$ROOT_DIR/static"/* $PROJECT_DIR/static/
 sudo mkdir -p $PROJECT_DIR/images
-sudo cp -r images/* $PROJECT_DIR/images/ 2>/dev/null || true
-sudo cp docker-compose.yml $PROJECT_DIR/ 2>/dev/null || true
-sudo cp deploy/docker-compose.prod.yml $PROJECT_DIR/ 2>/dev/null || true
-sudo cp init.sql $PROJECT_DIR/
-[ -f migrate_db.sh ] && sudo cp migrate_db.sh $PROJECT_DIR/ || true
-[ -f update_cards_safe.sh ] && sudo cp update_cards_safe.sh $PROJECT_DIR/ || true
+sudo cp -r "$ROOT_DIR/images"/* $PROJECT_DIR/images/ 2>/dev/null || true
+sudo cp "$ROOT_DIR/docker-compose.yml" $PROJECT_DIR/ 2>/dev/null || true
+sudo cp "$ROOT_DIR/deploy/docker-compose.prod.yml" $PROJECT_DIR/ 2>/dev/null || true
+sudo cp "$ROOT_DIR/init.sql" $PROJECT_DIR/
+[ -f "$ROOT_DIR/migrate_db.sh" ] && sudo cp "$ROOT_DIR/migrate_db.sh" $PROJECT_DIR/ || true
+[ -f "$ROOT_DIR/update_cards_safe.sh" ] && sudo cp "$ROOT_DIR/update_cards_safe.sh" $PROJECT_DIR/ || true
 sudo mkdir -p $PROJECT_DIR/scripts
-sudo cp -r scripts/* $PROJECT_DIR/scripts/ 2>/dev/null || true
+sudo cp -r "$ROOT_DIR/scripts"/* $PROJECT_DIR/scripts/ 2>/dev/null || true
 sudo chmod +x $PROJECT_DIR/h5project
 [ -f $PROJECT_DIR/*.sh ] && sudo chmod +x $PROJECT_DIR/*.sh 2>/dev/null || true
 [ -d $PROJECT_DIR/scripts ] && sudo chmod +x $PROJECT_DIR/scripts/*.sh 2>/dev/null || true
@@ -69,17 +89,17 @@ fi
 
 echo "✅ 文件复制完成"
 
-# 4. 配置systemd服务
+# 5. 配置systemd服务
 echo ""
-echo "⚙️  步骤4: 配置systemd服务..."
-sudo cp deploy/h5project.service /etc/systemd/system/
+echo "⚙️  步骤5: 配置systemd服务..."
+sudo cp "$ROOT_DIR/deploy/h5project.service" /etc/systemd/system/
 sudo systemctl daemon-reload
 echo "✅ 服务配置完成"
 
-# 5. 配置Nginx
+# 6. 配置Nginx
 echo ""
-echo "🌐 步骤5: 配置Nginx..."
-sudo cp deploy/nginx.conf /etc/nginx/sites-available/$NGINX_SITE
+echo "🌐 步骤6: 配置Nginx..."
+sudo cp "$ROOT_DIR/deploy/nginx.conf" /etc/nginx/sites-available/$NGINX_SITE
 if [ ! -L "/etc/nginx/sites-enabled/$NGINX_SITE" ]; then
     sudo ln -s /etc/nginx/sites-available/$NGINX_SITE /etc/nginx/sites-enabled/
 fi
@@ -92,9 +112,9 @@ else
     exit 1
 fi
 
-# 6. 启动数据库（如果使用Docker）
+# 7. 启动数据库（如果使用Docker）
 echo ""
-echo "🗄️  步骤6: 检查数据库..."
+echo "🗄️  步骤7: 检查数据库..."
 if command -v docker &> /dev/null; then
     cd $PROJECT_DIR
     if ! docker ps | grep -q h5project_db; then
@@ -116,9 +136,9 @@ else
     echo "⚠️  未检测到Docker，请手动启动数据库"
 fi
 
-# 6.5 初始化数据库和导入图片
+# 7.5 初始化数据库和导入图片
 echo ""
-echo "📊 步骤6.5: 初始化数据库..."
+echo "📊 步骤7.5: 初始化数据库..."
 cd $PROJECT_DIR
 if [ -f "scripts/init_server.sh" ]; then
     chmod +x scripts/init_server.sh
@@ -127,9 +147,9 @@ else
     echo "⚠️  未找到初始化脚本，请手动运行: ./scripts/init_server.sh"
 fi
 
-# 7. 启动服务
+# 8. 启动服务
 echo ""
-echo "🚀 步骤7: 启动服务..."
+echo "🚀 步骤8: 启动服务..."
 sudo systemctl enable $SERVICE_NAME
 sudo systemctl restart $SERVICE_NAME
 sleep 2
@@ -141,9 +161,9 @@ else
     exit 1
 fi
 
-# 8. 重启Nginx
+# 9. 重启Nginx
 echo ""
-echo "🔄 步骤8: 重启Nginx..."
+echo "🔄 步骤9: 重启Nginx..."
 sudo systemctl restart nginx
 echo "✅ Nginx重启完成"
 

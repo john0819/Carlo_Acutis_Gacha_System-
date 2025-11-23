@@ -244,18 +244,29 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 func getUserByID(userID int) *models.User {
 	var user models.User
+
+	// 获取基本用户信息
 	err := database.DB.QueryRow(
-		"SELECT id, username, holy_name, nickname, birthday, checkin_count, exchange_points, created_at, updated_at FROM users WHERE id = $1",
+		"SELECT id, username, holy_name, nickname, birthday, exchange_points, created_at, updated_at FROM users WHERE id = $1",
 		userID,
 	).Scan(
 		&user.ID, &user.Username, &user.HolyName, &user.Nickname,
-		&user.Birthday, &user.CheckinCount, &user.ExchangePoints,
+		&user.Birthday, &user.ExchangePoints,
 		&user.CreatedAt, &user.UpdatedAt,
 	)
 
 	if err != nil {
 		return nil
 	}
+
+	// 计算实际打卡次数（去重，每天只算一次）
+	var checkinCount int
+	database.DB.QueryRow(
+		"SELECT COUNT(DISTINCT draw_date) FROM daily_draws WHERE user_id = $1",
+		userID,
+	).Scan(&checkinCount)
+
+	user.CheckinCount = checkinCount
 	return &user
 }
 
@@ -272,9 +283,9 @@ func GetCheckinHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 查询用户所有打卡记录
+	// 查询用户所有打卡记录（去重，每天只算一次）
 	rows, err := database.DB.Query(
-		"SELECT draw_date FROM daily_draws WHERE user_id = $1 ORDER BY draw_date DESC",
+		"SELECT DISTINCT draw_date FROM daily_draws WHERE user_id = $1 ORDER BY draw_date DESC",
 		userID,
 	)
 	if err != nil {

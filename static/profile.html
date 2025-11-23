@@ -557,9 +557,20 @@
         document.getElementById('profileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const holyName = document.getElementById('holyName').value.trim() || null;
-            const nickname = document.getElementById('nickname').value.trim() || null;
+            // 输入验证和XSS防护
+            const holyName = sanitizeInput(document.getElementById('holyName').value.trim()) || null;
+            const nickname = sanitizeInput(document.getElementById('nickname').value.trim()) || null;
             const birthday = document.getElementById('birthday').value || null;
+
+            // 验证输入长度
+            if (holyName && holyName.length > 50) {
+                showError('圣名长度不能超过50字符');
+                return;
+            }
+            if (nickname && nickname.length > 50) {
+                showError('昵称长度不能超过50字符');
+                return;
+            }
 
             const updateData = {};
             if (holyName) updateData.holy_name = holyName;
@@ -706,6 +717,23 @@
             successDiv.textContent = message;
             successDiv.classList.add('show');
             setTimeout(() => successDiv.classList.remove('show'), 3000);
+        }
+
+        // 输入清理函数，防止XSS
+        function sanitizeInput(input) {
+            if (!input) return input;
+            return input
+                .replace(/[<>'"&]/g, function(match) {
+                    const escapeMap = {
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#x27;',
+                        '&': '&amp;'
+                    };
+                    return escapeMap[match];
+                })
+                .trim();
         }
 
         // 页面加载时获取用户信息和打卡历史

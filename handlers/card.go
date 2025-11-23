@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"image"
@@ -9,7 +11,8 @@ import (
 	"image/draw"
 	"image/jpeg"
 	"image/png"
-	"math/rand"
+	"log"
+	mathRand "math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -293,20 +296,30 @@ func DrawCard(w http.ResponseWriter, r *http.Request) {
 	var selectedCard models.Card
 	var isNewCard bool
 
-	rand.Seed(time.Now().UnixNano())
-	random := rand.Float64()
+	// 使用crypto/rand获得更安全的随机数
+	var random float64
+	randomBytes := make([]byte, 8)
+	if _, err := rand.Read(randomBytes); err != nil {
+		// 如果crypto/rand失败，回退到math/rand
+		mathRand.Seed(time.Now().UnixNano())
+		random = mathRand.Float64()
+	} else {
+		// 将随机字节转换为0-1之间的浮点数
+		randomInt := binary.BigEndian.Uint64(randomBytes)
+		random = float64(randomInt) / float64(^uint64(0))
+	}
 
 	if random < 0.9 && len(newCards) > 0 {
 		// 90%概率抽新卡
-		selectedCard = newCards[rand.Intn(len(newCards))]
+		selectedCard = newCards[mathRand.Intn(len(newCards))]
 		isNewCard = true
 	} else if len(oldCards) > 0 {
 		// 10%概率或没有新卡时抽旧卡
-		selectedCard = oldCards[rand.Intn(len(oldCards))]
+		selectedCard = oldCards[mathRand.Intn(len(oldCards))]
 		isNewCard = false
 	} else {
 		// 如果没有旧卡，只能抽新卡
-		selectedCard = newCards[rand.Intn(len(newCards))]
+		selectedCard = newCards[mathRand.Intn(len(newCards))]
 		isNewCard = true
 	}
 
@@ -328,7 +341,7 @@ func DrawCard(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		// 记录错误但不影响返回结果
-		_ = err
+		log.Printf("⚠️  更新用户打卡次数失败: %v", err)
 	}
 
 	// 如果是新卡，添加到用户卡包
@@ -340,7 +353,7 @@ func DrawCard(w http.ResponseWriter, r *http.Request) {
 		)
 		if err != nil {
 			// 记录错误但不影响返回结果
-			_ = err
+			log.Printf("⚠️  添加新卡到用户卡包失败: %v", err)
 		}
 
 		// 检查成就

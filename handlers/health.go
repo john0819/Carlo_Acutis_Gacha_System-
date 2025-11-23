@@ -35,13 +35,20 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// 检查数据库连接池状态
+	dbStats := database.DB.Stats()
+
 	// 构建响应
 	response := map[string]interface{}{
 		"status":    "ok",
 		"timestamp": time.Now().Format(time.RFC3339),
 		"database": map[string]interface{}{
-			"status": dbStatus,
+			"status":           dbStatus,
+			"open_connections": dbStats.OpenConnections,
+			"in_use":           dbStats.InUse,
+			"idle":             dbStats.Idle,
 		},
+		"version": "1.0.0",
 	}
 
 	// 设置状态码

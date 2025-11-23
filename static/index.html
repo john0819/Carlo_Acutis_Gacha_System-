@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>一步一步都有祝福</title>
+    <title>✝ 一步一步都有祝福 - 天主教圣像收集</title>
     <style>
         :root {
-            --primary-color: #1a237e; /* Deep Blue */
-            --accent-color: #ffd700;  /* Gold */
+            --primary-color: #1a237e; /* Deep Blue - 象征天主的神圣 */
+            --accent-color: #ffd700;  /* Gold - 象征神圣光辉 */
+            --secondary-color: #8b4513; /* Brown - 象征谦逊朴素 */
+            --holy-color: #4a148c;     /* Purple - 象征王权神圣 */
             --text-color: #333;
-            --bg-color: #f5f7fa;
+            --bg-color: #f8f9ff;       /* 更温和的背景色 */
             --card-bg: #ffffff;
+            --shadow-color: rgba(26, 35, 126, 0.1);
         }
 
         * {
@@ -26,11 +29,27 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: var(--bg-color);
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8eaf6 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             padding-top: 70px;
             padding-bottom: 40px;
             color: var(--text-color);
+            position: relative;
+        }
+
+        /* 添加微妙的背景装饰 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(26, 35, 126, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         /* 顶部导航 */
@@ -64,6 +83,15 @@
             max-width: calc(100% - 160px);
             overflow: hidden;
             letter-spacing: 0.5px;
+            position: relative;
+        }
+
+        .nav-brand::before {
+            content: '✝';
+            font-size: 16px;
+            color: var(--accent-color);
+            margin-right: 4px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
         .nav-brand-text {
@@ -101,18 +129,28 @@
             width: 92%;
             max-width: 600px;
             margin: 20px auto;
-            background: var(--card-bg);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 255, 0.9) 100%);
             border-radius: 24px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(26, 35, 126, 0.08);
+            box-shadow: 0 15px 35px var(--shadow-color);
             text-align: center;
             position: relative;
             overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.02);
+            border: 2px solid rgba(255, 215, 0, 0.2);
         }
         
         .daily-quote-container::before {
-            content: '”';
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 50%, var(--primary-color) 100%);
+        }
+
+        .daily-quote-container::after {
+            content: '"';
             position: absolute;
             top: -20px;
             right: 10px;
@@ -162,26 +200,27 @@
         }
 
         .grid-card {
-            background: white;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 255, 0.9) 100%);
             border-radius: 24px;
             padding: 25px 15px;
             display: flex;
-                flex-direction: column;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 25px var(--shadow-color);
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             cursor: pointer;
             min-height: 170px;
             position: relative;
             overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.5);
+            border: 2px solid rgba(255, 215, 0, 0.15);
         }
 
         .grid-card:hover {
             transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 15px 30px rgba(26, 35, 126, 0.15);
+            box-shadow: 0 20px 40px rgba(26, 35, 126, 0.2);
+            border-color: rgba(255, 215, 0, 0.4);
         }
         
         /* 增加卡片光泽效果 */
@@ -218,6 +257,23 @@
             margin-bottom: 12px;
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
             transition: transform 0.3s;
+        }
+
+        /* 为不同功能添加主题色彩 */
+        .card-checkin .grid-icon {
+            color: var(--primary-color);
+        }
+
+        .card-collection .grid-icon {
+            color: var(--accent-color);
+        }
+
+        .card-achievements .grid-icon {
+            color: var(--holy-color);
+        }
+
+        .card-exchange .grid-icon {
+            color: var(--secondary-color);
         }
         
         .grid-card:hover .grid-icon {
@@ -263,7 +319,7 @@
         }
 
         .modal-content {
-            background: white;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 255, 0.95) 100%);
             border-radius: 24px;
             padding: 30px;
             width: 100%;
@@ -271,8 +327,20 @@
             position: relative;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 25px 80px rgba(26, 35, 126, 0.25);
             animation: slideUp 0.3s ease-out;
+            border: 2px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 50%, var(--primary-color) 100%);
+            border-radius: 24px 24px 0 0;
         }
 
         @keyframes fadeIn {
@@ -631,7 +699,7 @@
         <!-- 模块4：兑换商店 -->
         <div class="grid-card card-exchange" onclick="openExchangeModal()">
             <div class="grid-icon">🎁</div>
-            <div class="grid-title">兑换商店</div>
+            <div class="grid-title">圣物兑换</div>
             <div class="grid-desc">积分兑换 实体好礼</div>
             </div>
         </div>
@@ -663,7 +731,7 @@
     <div class="modal" id="exchangeModal">
         <div class="modal-content">
             <button class="close-modal-btn" onclick="closeExchangeModal()">×</button>
-            <h3 style="text-align: center; margin-bottom: 20px; color: var(--primary-color);">🎁 兑换商店</h3>
+            <h3 style="text-align: center; margin-bottom: 20px; color: var(--primary-color);">🎁 圣物兑换</h3>
             
             <!-- 兑换提示信息（移到上方） -->
             <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 2px solid var(--accent-color);">
@@ -690,7 +758,7 @@
                     <div class="exchange-title">【基础兑换】</div>
                     <div class="exchange-badge basic">基础</div>
             </div>
-                <div class="exchange-desc">钓圣人徽章机会</div>
+                <div class="exchange-desc">随机圣人徽章（精美制作）</div>
                 <div class="exchange-cost">
                     <span class="exchange-cost-label">消耗兑换点</span>
                     <span class="exchange-cost-value">1 点</span>
@@ -707,7 +775,7 @@
                     <div class="exchange-title">【高级兑换】</div>
                     <div class="exchange-badge">高级</div>
             </div>
-                <div class="exchange-desc">指定圣人徽章</div>
+                <div class="exchange-desc">指定圣人徽章（可选心仪圣人）</div>
                 <div class="exchange-cost">
                     <span class="exchange-cost-label">消耗兑换点</span>
                     <span class="exchange-cost-value">5 点</span>
@@ -757,7 +825,7 @@
             <div style="margin-top: 15px; line-height: 1.6; color: #555; font-size: 14px;">
                 <p><strong>1. 每日打卡：</strong>每天登录可抽取一张圣像卡片，收集您的专属图鉴。</p>
                 <p style="margin-top: 10px;"><strong>2. 成就系统：</strong>完成收集任务可获得成就点数。</p>
-                <p style="margin-top: 10px;"><strong>3. 兑换商店：</strong>使用成就点数兑换实体奖励（即将开放）。</p>
+                <p style="margin-top: 10px;"><strong>3. 圣物兑换：</strong>使用兑换点到罗源南门堂圣物部兑换精美圣人徽章。</p>
                 <p style="margin-top: 10px;"><strong>4. 每日圣言：</strong>每天一句天主圣言，滋养心灵。</p>
             </div>
         </div>

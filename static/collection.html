@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>我的卡包 - 一步一步都有祝福</title>
+    <title>📚 我的圣像卡包 - 一步一步都有祝福</title>
     <style>
         :root {
-            --primary-color: #1a237e;
-            --accent-color: #ffd700;
-            --bg-color: #f5f7fa;
+            --primary-color: #1a237e; /* Deep Blue - 象征天主的神圣 */
+            --accent-color: #ffd700;  /* Gold - 象征神圣光辉 */
+            --secondary-color: #8b4513; /* Brown - 象征谦逊朴素 */
+            --holy-color: #4a148c;     /* Purple - 象征王权神圣 */
+            --bg-color: #f8f9ff;       /* 更温和的背景色 */
             --card-bg: #ffffff;
+            --shadow-color: rgba(26, 35, 126, 0.1);
         }
 
         * {
@@ -21,11 +24,25 @@
         body {
             width: 100%;
             min-height: 100vh;
-            background: var(--bg-color);
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8eaf6 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             padding: 20px;
             padding-top: 70px;
             position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(26, 35, 126, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         .header {
@@ -625,8 +642,16 @@
             }
         }
 
-        // 优化后的图片加载函数（带超时和重试）
-        function loadImageWithRetry(imgElement, imageUrl, maxRetries = 2, timeout = 10000) {
+        // 图片预加载缓存
+        const imageCache = new Map();
+        
+        // 优化后的图片加载函数（带缓存、超时和重试）
+        function loadImageWithRetry(imgElement, imageUrl, maxRetries = 2, timeout = 8000) {
+            // 检查缓存
+            if (imageCache.has(imageUrl)) {
+                imgElement.src = imageUrl;
+                return Promise.resolve();
+            }
             let retryCount = 0;
             
             const tryLoad = () => {
@@ -637,6 +662,8 @@
                     
                     imgElement.onload = () => {
                         clearTimeout(timeoutId);
+                        // 添加到缓存
+                        imageCache.set(imageUrl, true);
                         resolve();
                     };
                     
@@ -693,6 +720,7 @@
                 img.alt = card.name;
                 img.className = 'card-image';
                 img.loading = 'lazy';
+                img.decoding = 'async';
                 
                 img.style.opacity = '0.5';
                 img.style.transition = 'opacity 0.3s';

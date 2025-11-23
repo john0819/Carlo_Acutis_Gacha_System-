@@ -801,10 +801,15 @@ func GetRedemptionInfo(w http.ResponseWriter, r *http.Request) {
 	// 检查本月是否已兑换（不管哪种类型，一个月总共只能兑换一次）
 	var redeemedAt sql.NullTime
 	var redeemedType sql.NullString
-	database.DB.QueryRow(
+	err = database.DB.QueryRow(
 		"SELECT redeemed_at, redemption_type FROM redemption_records WHERE user_id = $1 AND redemption_month = $2 LIMIT 1",
 		userID, currentMonth,
 	).Scan(&redeemedAt, &redeemedType)
+	// 如果没有记录，这是正常的，不需要报错
+	if err != nil && err != sql.ErrNoRows {
+		sendError(w, "查询兑换记录失败", http.StatusInternalServerError)
+		return
+	}
 
 	hasRedeemed := redeemedAt.Valid
 	basicRedeemed := hasRedeemed && redeemedType.Valid && redeemedType.String == "basic"
@@ -812,10 +817,14 @@ func GetRedemptionInfo(w http.ResponseWriter, r *http.Request) {
 
 	// 获取用户兑换点
 	var exchangePoints int
-	database.DB.QueryRow(
-		"SELECT exchange_points FROM users WHERE id = $1",
+	err = database.DB.QueryRow(
+		"SELECT COALESCE(exchange_points, 0) FROM users WHERE id = $1",
 		userID,
 	).Scan(&exchangePoints)
+	if err != nil {
+		sendError(w, "查询用户信息失败", http.StatusInternalServerError)
+		return
+	}
 
 	// 兑换地点信息
 	redemptionLocation := "罗源南门堂圣物部"

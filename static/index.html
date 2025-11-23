@@ -1291,18 +1291,40 @@
                 } else {
                     // 处理错误响应
                     const errorData = await redeemResponse.json().catch(() => ({ error: '请求失败' }));
-                    console.error('加载兑换信息失败:', errorData);
-                    // 显示错误信息
+                    console.error('加载兑换信息失败:', errorData, '状态码:', redeemResponse.status);
+                    // 显示错误信息并禁用按钮
+                    const basicBtn = document.getElementById('basicRedeemBtn');
+                    const premiumBtn = document.getElementById('premiumRedeemBtn');
                     const basicStatus = document.getElementById('basicStatus');
                     const premiumStatus = document.getElementById('premiumStatus');
+                    
+                    if (basicBtn) {
+                        basicBtn.disabled = true;
+                        basicBtn.textContent = '加载失败';
+                    }
+                    if (premiumBtn) {
+                        premiumBtn.disabled = true;
+                        premiumBtn.textContent = '加载失败';
+                    }
                     if (basicStatus) basicStatus.innerHTML = `<span style="color: #e74c3c;">${errorData.error || '查询失败'}</span>`;
                     if (premiumStatus) premiumStatus.innerHTML = `<span style="color: #e74c3c;">${errorData.error || '查询失败'}</span>`;
                 }
             } catch (e) {
                 console.error('加载兑换信息失败:', e);
-                // 显示错误信息
+                // 显示错误信息并禁用按钮
+                const basicBtn = document.getElementById('basicRedeemBtn');
+                const premiumBtn = document.getElementById('premiumRedeemBtn');
                 const basicStatus = document.getElementById('basicStatus');
                 const premiumStatus = document.getElementById('premiumStatus');
+                
+                if (basicBtn) {
+                    basicBtn.disabled = true;
+                    basicBtn.textContent = '加载失败';
+                }
+                if (premiumBtn) {
+                    premiumBtn.disabled = true;
+                    premiumBtn.textContent = '加载失败';
+                }
                 if (basicStatus) basicStatus.innerHTML = '<span style="color: #e74c3c;">网络错误，请刷新重试</span>';
                 if (premiumStatus) premiumStatus.innerHTML = '<span style="color: #e74c3c;">网络错误，请刷新重试</span>';
             }
@@ -1342,17 +1364,22 @@
                 }
             } else {
                 // 未兑换，检查兑换点是否足够
-                if (data.exchange_points < 1) {
+                const points = parseInt(data.exchange_points) || 0;
+                console.log('兑换点数量:', points, '数据类型:', typeof data.exchange_points);
+                
+                // 基础兑换（需要1点）
+                if (points < 1) {
                     basicBtn.disabled = true;
                     basicBtn.textContent = '兑换点不足';
-                    basicStatus.innerHTML = '<span style="color: #e74c3c;">兑换点不足</span>';
+                    basicStatus.innerHTML = '<span style="color: #e74c3c;">兑换点不足（需要1点）</span>';
                 } else {
                     basicBtn.disabled = false;
                     basicBtn.textContent = '立即兑换（消耗1点）';
                     basicStatus.innerHTML = '';
                 }
 
-                if (data.exchange_points < 5) {
+                // 高级兑换（需要5点）
+                if (points < 5) {
                     premiumBtn.disabled = true;
                     premiumBtn.textContent = '兑换点不足';
                     premiumStatus.innerHTML = '<span style="color: #e74c3c;">兑换点不足（需要5点）</span>';

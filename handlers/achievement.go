@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -711,9 +712,11 @@ func Redeem(w http.ResponseWriter, r *http.Request) {
 		userID, currentMonth,
 	).Scan(&alreadyRedeemed, &redeemedAt, &redeemedType)
 	if err != nil {
+		log.Printf("❌ [ERROR] Redeem: 查询兑换记录失败 - userID=%d, month=%s, type=%s, error=%v", userID, currentMonth, req.Type, err)
 		sendError(w, "查询失败", http.StatusInternalServerError)
 		return
 	}
+	log.Printf("ℹ️  [INFO] Redeem: 用户 %d, 已兑换=%v, 类型=%s, 月份=%s", userID, alreadyRedeemed, req.Type, currentMonth)
 
 	if alreadyRedeemed {
 		var previousTypeName string
@@ -749,13 +752,15 @@ func Redeem(w http.ResponseWriter, r *http.Request) {
 	// 检查用户兑换点
 	var exchangePoints int
 	err = database.DB.QueryRow(
-		"SELECT exchange_points FROM users WHERE id = $1",
+		"SELECT COALESCE(exchange_points, 0) FROM users WHERE id = $1",
 		userID,
 	).Scan(&exchangePoints)
 	if err != nil {
+		log.Printf("❌ [ERROR] Redeem: 查询用户兑换点失败 - userID=%d, error=%v", userID, err)
 		sendError(w, "查询用户信息失败", http.StatusInternalServerError)
 		return
 	}
+	log.Printf("ℹ️  [INFO] Redeem: 用户 %d, 当前兑换点=%d, 需要=%d", userID, exchangePoints, cost)
 
 	if exchangePoints < cost {
 		sendError(w, fmt.Sprintf("兑换点不足，需要至少%d个兑换点", cost), http.StatusForbidden)
@@ -818,8 +823,12 @@ func GetRedemptionInfo(w http.ResponseWriter, r *http.Request) {
 	).Scan(&redeemedAt, &redeemedType)
 	// 如果没有记录，这是正常的，不需要报错
 	if err != nil && err != sql.ErrNoRows {
+		log.Printf("❌ [ERROR] GetRedemptionInfo: 查询兑换记录失败 - userID=%d, month=%s, error=%v", userID, currentMonth, err)
 		sendError(w, "查询兑换记录失败", http.StatusInternalServerError)
 		return
+	}
+	if err == sql.ErrNoRows {
+		log.Printf("ℹ️  [INFO] GetRedemptionInfo: 用户 %d 本月无兑换记录", userID)
 	}
 
 	hasRedeemed := redeemedAt.Valid
@@ -833,9 +842,11 @@ func GetRedemptionInfo(w http.ResponseWriter, r *http.Request) {
 		userID,
 	).Scan(&exchangePoints)
 	if err != nil {
+		log.Printf("❌ [ERROR] GetRedemptionInfo: 查询用户兑换点失败 - userID=%d, error=%v", userID, err)
 		sendError(w, "查询用户信息失败", http.StatusInternalServerError)
 		return
 	}
+	log.Printf("ℹ️  [INFO] GetRedemptionInfo: 用户 %d, 兑换点=%d, 已兑换=%v, 月份=%s", userID, exchangePoints, hasRedeemed, currentMonth)
 
 	// 兑换地点信息
 	redemptionLocation := "罗源南门堂圣物部"

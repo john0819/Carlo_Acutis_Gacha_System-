@@ -704,10 +704,10 @@ func Redeem(w http.ResponseWriter, r *http.Request) {
 
 	// 检查本月是否已兑换（不管哪种类型，一个月总共只能兑换一次）
 	var alreadyRedeemed bool
-	var redeemedAt time.Time
-	var redeemedType string
+	var redeemedAt sql.NullTime
+	var redeemedType sql.NullString
 	err = database.DB.QueryRow(
-		"SELECT EXISTS(SELECT 1 FROM redemption_records WHERE user_id = $1 AND redemption_month = $2), COALESCE((SELECT redeemed_at FROM redemption_records WHERE user_id = $1 AND redemption_month = $2 LIMIT 1), CURRENT_TIMESTAMP), COALESCE((SELECT redemption_type FROM redemption_records WHERE user_id = $1 AND redemption_month = $2 LIMIT 1), '')",
+		"SELECT EXISTS(SELECT 1 FROM redemption_records WHERE user_id = $1 AND redemption_month = $2), (SELECT redeemed_at FROM redemption_records WHERE user_id = $1 AND redemption_month = $2 LIMIT 1), (SELECT redemption_type FROM redemption_records WHERE user_id = $1 AND redemption_month = $2 LIMIT 1)",
 		userID, currentMonth,
 	).Scan(&alreadyRedeemed, &redeemedAt, &redeemedType)
 	if err != nil {
@@ -717,20 +717,31 @@ func Redeem(w http.ResponseWriter, r *http.Request) {
 
 	if alreadyRedeemed {
 		var previousTypeName string
-		if redeemedType == "basic" {
-			previousTypeName = "基础兑换（钓圣人徽章机会）"
-		} else if redeemedType == "premium" {
-			previousTypeName = "高级兑换（指定圣人徽章）"
+		var redeemedAtTime time.Time
+		if redeemedType.Valid {
+			if redeemedType.String == "basic" {
+				previousTypeName = "基础兑换（随机圣人徽章）"
+			} else if redeemedType.String == "premium" {
+				previousTypeName = "高级兑换（指定圣人徽章）"
+			} else {
+				previousTypeName = "兑换"
+			}
 		} else {
 			previousTypeName = "兑换"
+		}
+
+		if redeemedAt.Valid {
+			redeemedAtTime = redeemedAt.Time
+		} else {
+			redeemedAtTime = time.Now()
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"error":       "本月已兑换",
-			"message":     fmt.Sprintf("您已于 %s 兑换过%s，每月只能兑换一次，请下月再来", redeemedAt.Format("2006-01-02 15:04:05"), previousTypeName),
-			"redeemed_at": redeemedAt.Format("2006-01-02 15:04:05"),
+			"message":     fmt.Sprintf("您已于 %s 兑换过%s，每月只能兑换一次，请下月再来", redeemedAtTime.Format("2006-01-02 15:04:05"), previousTypeName),
+			"redeemed_at": redeemedAtTime.Format("2006-01-02 15:04:05"),
 		})
 		return
 	}

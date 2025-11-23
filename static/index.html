@@ -1288,9 +1288,23 @@
                 if (redeemResponse.ok) {
                     const redeemData = await redeemResponse.json();
                     updateExchangeButtons(redeemData);
+                } else {
+                    // 处理错误响应
+                    const errorData = await redeemResponse.json().catch(() => ({ error: '请求失败' }));
+                    console.error('加载兑换信息失败:', errorData);
+                    // 显示错误信息
+                    const basicStatus = document.getElementById('basicStatus');
+                    const premiumStatus = document.getElementById('premiumStatus');
+                    if (basicStatus) basicStatus.innerHTML = `<span style="color: #e74c3c;">${errorData.error || '查询失败'}</span>`;
+                    if (premiumStatus) premiumStatus.innerHTML = `<span style="color: #e74c3c;">${errorData.error || '查询失败'}</span>`;
                 }
             } catch (e) {
                 console.error('加载兑换信息失败:', e);
+                // 显示错误信息
+                const basicStatus = document.getElementById('basicStatus');
+                const premiumStatus = document.getElementById('premiumStatus');
+                if (basicStatus) basicStatus.innerHTML = '<span style="color: #e74c3c;">网络错误，请刷新重试</span>';
+                if (premiumStatus) premiumStatus.innerHTML = '<span style="color: #e74c3c;">网络错误，请刷新重试</span>';
             }
         }
 

@@ -99,7 +99,21 @@ echo "✅ 服务配置完成"
 # 6. 配置Nginx
 echo ""
 echo "🌐 步骤6: 配置Nginx..."
-sudo cp "$ROOT_DIR/deploy/nginx.conf" /etc/nginx/sites-available/$NGINX_SITE
+# 检查是否已经配置了HTTPS（存在SSL证书文件）
+if [ -f "/etc/nginx/ssl/nginx-selfsigned.crt" ] || [ -d "/etc/letsencrypt/live" ]; then
+    echo "   检测到已配置HTTPS，保持HTTPS配置不变"
+    # 如果存在HTTPS配置文件，使用它；否则保持现有配置
+    if [ -f "$ROOT_DIR/deploy/nginx-https.conf" ]; then
+        echo "   更新HTTPS配置文件..."
+        sudo cp "$ROOT_DIR/deploy/nginx-https.conf" /etc/nginx/sites-available/$NGINX_SITE
+    else
+        echo "   ⚠️  未找到nginx-https.conf，保持现有配置"
+    fi
+else
+    echo "   使用HTTP配置..."
+    sudo cp "$ROOT_DIR/deploy/nginx.conf" /etc/nginx/sites-available/$NGINX_SITE
+fi
+
 if [ ! -L "/etc/nginx/sites-enabled/$NGINX_SITE" ]; then
     sudo ln -s /etc/nginx/sites-available/$NGINX_SITE /etc/nginx/sites-enabled/
 fi

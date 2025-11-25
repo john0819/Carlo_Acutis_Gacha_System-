@@ -238,3 +238,6 @@ docker exec -i h5project_db psql -U h5user -d h5project < scripts/monthly_active
 
 教堂的定位地点加入：
 ./scripts/update_church_locations.sql
+
+查看定位点：
+docker exec h5project_db psql -U h5user -d h5project -c "SELECT id, name, latitude, longitude, radius_meters, achievement_code FROM checkin_locations ORDER BY achievement_code, id;"

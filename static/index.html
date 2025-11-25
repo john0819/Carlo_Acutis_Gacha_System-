@@ -1065,8 +1065,10 @@
                                 navigator.userAgent.includes('MicroMessenger'); // 微信内
 
                 if (!isSecure && window.location.protocol !== 'https:') {
-                    console.warn('⚠️ 定位功能需要HTTPS环境，当前为:', window.location.protocol);
-                    // 微信内可能仍然可以工作，继续尝试
+                    console.warn('⚠️ [HTTP警告] 定位功能需要HTTPS环境，当前为:', window.location.protocol);
+                    console.warn('⚠️ [HTTP警告] 在HTTP环境下，浏览器可能不会弹出权限请求，或直接拒绝定位');
+                    console.warn('⚠️ [HTTP警告] 建议配置HTTPS以获得完整的定位功能支持');
+                    // HTTP环境下，Geolocation API可能无法正常工作，但继续尝试
                 }
 
                 // 如果用户主动请求定位，跳过权限检查，直接尝试获取位置
@@ -1081,21 +1083,32 @@
                         });
                     },
                     (error) => {
+                            console.log('🔍 [定位API-主动请求] 错误对象:', error);
+                            console.log('🔍 [定位API-主动请求] 错误代码:', error.code);
+                            console.log('🔍 [定位API-主动请求] 错误消息:', error.message);
+                            
                             let errorMessage = '无法获取位置信息';
-                            switch(error.code) {
-                                case error.PERMISSION_DENIED:
+                            let errorCode = error.code;
+                            
+                            switch(errorCode) {
+                                case 1: // PERMISSION_DENIED
                                     errorMessage = 'PERMISSION_DENIED';
                                     break;
-                                case error.POSITION_UNAVAILABLE:
+                                case 2: // POSITION_UNAVAILABLE
                                     errorMessage = '位置信息不可用，请检查GPS是否开启';
                                     break;
-                                case error.TIMEOUT:
+                                case 3: // TIMEOUT
                                     errorMessage = '获取位置超时，请重试';
                                     break;
                                 default:
                                     errorMessage = '获取位置失败，请检查定位权限';
                             }
-                            reject(new Error(errorMessage));
+                            
+                            // 创建错误对象，包含原始错误信息
+                            const err = new Error(errorMessage);
+                            err.code = errorCode;
+                            err.originalError = error;
+                            reject(err);
                     },
                     {
                         enableHighAccuracy: true,
@@ -1260,14 +1273,27 @@
                 console.error('📍 [用户确认] 错误堆栈:', locationError.stack);
                 
                 let errorMsg = '无法获取位置信息';
-                if (locationError.message === 'PERMISSION_DENIED' || locationError.code === 1) {
-                    errorMsg = '位置权限被拒绝，请在浏览器设置中允许位置访问后重试';
-                } else if (locationError.message.includes('GPS') || locationError.code === 2) {
+                const errorCode = locationError.code || locationError.originalError?.code;
+                console.log('🔍 [错误处理] 错误代码:', errorCode);
+                console.log('🔍 [错误处理] 当前协议:', window.location.protocol);
+                
+                if (locationError.message === 'PERMISSION_DENIED' || errorCode === 1) {
+                    // HTTP环境下，权限被拒绝可能是因为浏览器不支持HTTP定位
+                    if (window.location.protocol === 'http:') {
+                        errorMsg = '定位功能需要HTTPS安全连接。\n当前使用HTTP协议，浏览器无法弹出定位权限请求。\n请配置HTTPS证书后重试，或联系管理员。';
+                    } else {
+                        errorMsg = '位置权限被拒绝，请在浏览器设置中允许位置访问后重试';
+                    }
+                } else if (locationError.message.includes('GPS') || errorCode === 2) {
                     errorMsg = locationError.message || '位置信息不可用，请检查GPS是否开启';
-                } else if (locationError.message.includes('超时') || locationError.code === 3) {
+                } else if (locationError.message.includes('超时') || errorCode === 3) {
                     errorMsg = locationError.message || '获取位置超时，请重试';
                 } else {
-                    errorMsg = '无法获取位置，请检查：\n1. 是否允许了位置权限\n2. GPS是否已开启\n3. 网络连接是否正常\n4. 是否使用HTTPS（定位功能需要安全连接）';
+                    if (window.location.protocol === 'http:') {
+                        errorMsg = '无法获取位置，可能的原因：\n1. 当前使用HTTP协议，定位功能需要HTTPS\n2. 浏览器不支持HTTP环境下的定位\n3. 请配置HTTPS证书后重试';
+                    } else {
+                        errorMsg = '无法获取位置，请检查：\n1. 是否允许了位置权限\n2. GPS是否已开启\n3. 网络连接是否正常';
+                    }
                 }
                 showToast(errorMsg, 'error');
                 btn.disabled = false;

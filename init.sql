@@ -157,16 +157,9 @@ ON CONFLICT (code) DO UPDATE SET
     description = EXCLUDED.description,
     reward_points = EXCLUDED.reward_points;
 
--- 插入默认打卡地点（如果不存在，基于name判断）
-INSERT INTO checkin_locations (name, latitude, longitude, radius_meters, achievement_code) 
-SELECT * FROM (VALUES
-    ('南门天主教堂', 26.48, 119.54, 1000, 'location_a_15'),
-    ('港头天主教堂', 26.50, 119.56, 1000, 'location_b_15'),
-    ('测试地点', 22.30, 114.18, 1000, NULL)
-) AS v(name, latitude, longitude, radius_meters, achievement_code)
-WHERE NOT EXISTS (
-    SELECT 1 FROM checkin_locations WHERE checkin_locations.name = v.name
-);
+-- 插入默认打卡地点（如果不存在，基于achievement_code判断，避免重复插入）
+-- 注意：实际的地点配置应该通过 scripts/update_church_locations.sql 来管理
+-- 这里不再自动插入，避免与手动配置的地点冲突
 
 -- 反馈表
 CREATE TABLE IF NOT EXISTS feedbacks (

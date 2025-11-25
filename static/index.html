@@ -204,7 +204,7 @@
             border-radius: 24px;
             padding: 25px 15px;
             display: flex;
-            flex-direction: column;
+                flex-direction: column;
             align-items: center;
             justify-content: center;
             text-decoration: none;
@@ -841,7 +841,7 @@
                 </div>
             </div>
         </div>
-    </div>
+            </div>
 
     <!-- 介绍弹窗 -->
     <div class="modal" id="introModal">
@@ -1028,15 +1028,23 @@
 
         // 检查定位权限状态
         async function checkLocationPermission() {
+            console.log('🔍 [权限检查] 开始检查定位权限状态...');
+            console.log('🔍 [权限检查] navigator.permissions 支持:', !!navigator.permissions);
+            console.log('🔍 [权限检查] navigator.permissions.query 支持:', !!(navigator.permissions && navigator.permissions.query));
+            
             if (!navigator.permissions || !navigator.permissions.query) {
                 // 浏览器不支持权限查询API，直接尝试获取位置
+                console.log('🔍 [权限检查] 浏览器不支持权限查询API，返回 prompt');
                 return 'prompt';
             }
             try {
                 const result = await navigator.permissions.query({ name: 'geolocation' });
+                console.log('🔍 [权限检查] 权限状态:', result.state);
+                console.log('🔍 [权限检查] 权限对象:', result);
                 return result.state; // 'granted', 'denied', 或 'prompt'
             } catch (e) {
-                console.warn('无法查询定位权限状态:', e);
+                console.warn('🔍 [权限检查] 无法查询定位权限状态:', e);
+                console.warn('🔍 [权限检查] 错误详情:', e.message, e.stack);
                 return 'prompt';
             }
         }
@@ -1047,8 +1055,8 @@
             return new Promise((resolve, reject) => {
                 if (!navigator.geolocation) {
                     reject(new Error('浏览器不支持地理位置服务'));
-                    return;
-                }
+                return;
+            }
 
                 // 检查是否在HTTPS环境或localhost（微信内可能例外）
                 const isSecure = window.location.protocol === 'https:' || 
@@ -1064,15 +1072,15 @@
                 // 如果用户主动请求定位，跳过权限检查，直接尝试获取位置
                 if (skipPermissionCheck) {
                     console.log('📍 用户主动请求定位，跳过权限检查，直接获取位置...');
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            resolve({
-                                latitude: position.coords.latitude,
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({
+                            latitude: position.coords.latitude,
                                 longitude: position.coords.longitude,
                                 accuracy: position.coords.accuracy
-                            });
-                        },
-                        (error) => {
+                        });
+                    },
+                    (error) => {
                             let errorMessage = '无法获取位置信息';
                             switch(error.code) {
                                 case error.PERMISSION_DENIED:
@@ -1088,9 +1096,9 @@
                                     errorMessage = '获取位置失败，请检查定位权限';
                             }
                             reject(new Error(errorMessage));
-                        },
-                        {
-                            enableHighAccuracy: true,
+                    },
+                    {
+                        enableHighAccuracy: true,
                             timeout: 15000,
                             maximumAge: 60000
                         }
@@ -1235,24 +1243,31 @@
             btn.textContent = "获取位置中...";
 
             try {
-                console.log('📍 用户已确认，正在获取位置（跳过权限检查）...');
+                console.log('📍 [用户确认] 用户已确认，正在获取位置（跳过权限检查）...');
+                console.log('📍 [用户确认] 当前协议:', window.location.protocol);
+                console.log('📍 [用户确认] 当前域名:', window.location.hostname);
                 // 用户主动请求时，跳过权限检查，直接尝试获取位置（会触发浏览器权限弹窗）
                 currentLocation = await getCurrentLocation(true);
-                console.log('📍 获取到位置:', currentLocation);
+                console.log('📍 [用户确认] 获取到位置:', currentLocation);
                 
                 // 位置获取成功，继续抽卡流程
                 await proceedWithDrawCard();
             } catch (locationError) {
-                console.error('📍 获取位置失败:', locationError);
+                console.error('📍 [用户确认] 获取位置失败:', locationError);
+                console.error('📍 [用户确认] 错误类型:', locationError.name);
+                console.error('📍 [用户确认] 错误消息:', locationError.message);
+                console.error('📍 [用户确认] 错误代码:', locationError.code);
+                console.error('📍 [用户确认] 错误堆栈:', locationError.stack);
+                
                 let errorMsg = '无法获取位置信息';
-                if (locationError.message === 'PERMISSION_DENIED') {
+                if (locationError.message === 'PERMISSION_DENIED' || locationError.code === 1) {
                     errorMsg = '位置权限被拒绝，请在浏览器设置中允许位置访问后重试';
-                } else if (locationError.message.includes('GPS')) {
-                    errorMsg = locationError.message;
-                } else if (locationError.message.includes('超时')) {
-                    errorMsg = locationError.message;
+                } else if (locationError.message.includes('GPS') || locationError.code === 2) {
+                    errorMsg = locationError.message || '位置信息不可用，请检查GPS是否开启';
+                } else if (locationError.message.includes('超时') || locationError.code === 3) {
+                    errorMsg = locationError.message || '获取位置超时，请重试';
                 } else {
-                    errorMsg = '无法获取位置，请检查：\n1. 是否允许了位置权限\n2. GPS是否已开启\n3. 网络连接是否正常';
+                    errorMsg = '无法获取位置，请检查：\n1. 是否允许了位置权限\n2. GPS是否已开启\n3. 网络连接是否正常\n4. 是否使用HTTPS（定位功能需要安全连接）';
                 }
                 showToast(errorMsg, 'error');
                 btn.disabled = false;
@@ -1270,10 +1285,10 @@
             try {
                 let requestBody = {};
                 if (locationCheckEnabled && currentLocation) {
-                    requestBody = {
-                        latitude: currentLocation.latitude,
-                        longitude: currentLocation.longitude
-                    };
+                        requestBody = {
+                            latitude: currentLocation.latitude,
+                            longitude: currentLocation.longitude
+                        };
                 }
 
                 const response = await fetch('/api/draw', {
@@ -1319,38 +1334,48 @@
                 // 如果启用了位置校验，先检查权限并获取位置
                 let requestBody = {};
                 if (locationCheckEnabled) {
-                    console.log('📍 位置校验已启用，检查定位权限...');
+                    console.log('📍 [抽卡流程] 位置校验已启用，检查定位权限...');
+                    console.log('📍 [抽卡流程] 当前协议:', window.location.protocol);
+                    console.log('📍 [抽卡流程] 当前域名:', window.location.hostname);
                     
                     // 先检查权限状态
                     const permissionState = await checkLocationPermission();
+                    console.log('📍 [抽卡流程] 权限检查结果:', permissionState);
                     
                     // 如果权限状态是 prompt（未询问过）或 denied（已拒绝），先显示提示弹窗
                     if (permissionState === 'prompt' || permissionState === 'denied') {
+                        console.log('📍 [抽卡流程] 权限状态为', permissionState, '，显示权限提示弹窗');
                         btn.disabled = false;
                         btn.textContent = "开始抽卡";
-                        showLocationPermissionModal();
+                        await showLocationPermissionModal();
                         return; // 等待用户点击"允许定位"按钮
                     }
                     
                     // 权限已授予，直接获取位置
                     try {
+                        console.log('📍 [抽卡流程] 权限已授予，开始获取位置...');
                         currentLocation = await getCurrentLocation();
-                        console.log('📍 获取到位置:', currentLocation);
+                        console.log('📍 [抽卡流程] 获取到位置:', currentLocation);
                         requestBody = {
                             latitude: currentLocation.latitude,
                             longitude: currentLocation.longitude
                         };
                     } catch (locationError) {
-                        console.error('📍 获取位置失败:', locationError);
+                        console.error('📍 [抽卡流程] 获取位置失败:', locationError);
+                        console.error('📍 [抽卡流程] 错误类型:', locationError.name);
+                        console.error('📍 [抽卡流程] 错误消息:', locationError.message);
+                        console.error('📍 [抽卡流程] 错误代码:', locationError.code);
+                        console.error('📍 [抽卡流程] 错误堆栈:', locationError.stack);
+                        
                         let errorMsg = '无法获取位置信息';
-                        if (locationError.message === 'PERMISSION_DENIED') {
+                        if (locationError.message === 'PERMISSION_DENIED' || locationError.code === 1) {
                             errorMsg = '位置权限被拒绝，请在浏览器设置中允许位置访问后重试';
-                        } else if (locationError.message.includes('GPS')) {
-                            errorMsg = locationError.message;
-                        } else if (locationError.message.includes('超时')) {
-                            errorMsg = locationError.message;
+                        } else if (locationError.message.includes('GPS') || locationError.code === 2) {
+                            errorMsg = locationError.message || '位置信息不可用，请检查GPS是否开启';
+                        } else if (locationError.message.includes('超时') || locationError.code === 3) {
+                            errorMsg = locationError.message || '获取位置超时，请重试';
                         } else {
-                            errorMsg = '无法获取位置，请检查：\n1. 是否允许了位置权限\n2. GPS是否已开启\n3. 网络连接是否正常';
+                            errorMsg = '无法获取位置，请检查：\n1. 是否允许了位置权限\n2. GPS是否已开启\n3. 网络连接是否正常\n4. 是否使用HTTPS（定位功能需要安全连接）';
                         }
                         showToast(errorMsg, 'error');
                         btn.disabled = false;

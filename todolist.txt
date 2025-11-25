@@ -235,3 +235,6 @@ docker exec -i h5project_db psql -U h5user -d h5project -c "INSERT INTO checkin_
 ./scripts/view_mau.sh
 
 docker exec -i h5project_db psql -U h5user -d h5project < scripts/monthly_active_users.sql
+
+教堂的定位地点加入：
+./scripts/update_church_locations.sql

@@ -49,7 +49,7 @@ WHERE code = 'first_card';
 
 UPDATE achievement_types SET 
     name = '朝圣新星', 
-    description = '累计在 3 个不同的教堂打卡成功', 
+    description = '累计在 2 个不同的教堂打卡成功', 
     reward_points = 1 
 WHERE code = 'pilgrim_nova';
 

@@ -38,14 +38,14 @@ func CheckAchievements(userID int) ([]models.AchievementStatus, error) {
 		}
 	}
 
-	// 检查成就2: 朝圣新星 - 累计在3个不同的教堂打卡成功
-	// 这里暂时用累计打卡3次来模拟（实际应该是3个不同地点）
-	var checkinCount int
+	// 检查成就2: 朝圣新星 - 累计在2个不同的教堂打卡成功
+	// 检查用户在location_checkins表中打卡的不同教堂数量
+	var churchCount int
 	database.DB.QueryRow(
-		"SELECT COUNT(DISTINCT draw_date) FROM daily_draws WHERE user_id = $1",
+		"SELECT COUNT(DISTINCT location_id) FROM location_checkins WHERE user_id = $1",
 		userID,
-	).Scan(&checkinCount)
-	if checkinCount >= 3 {
+	).Scan(&churchCount)
+	if churchCount >= 2 {
 		err = checkAndUnlockAchievement(userID, "pilgrim_nova")
 		if err == nil {
 			ach, _ := getAchievementStatus(userID, "pilgrim_nova")
@@ -145,13 +145,13 @@ func verifyAchievementCondition(userID int, achievementCode string) bool {
 		).Scan(&count)
 		return count >= 1
 	case "pilgrim_nova":
-		// 朝圣新星 - 累计在3个不同的教堂打卡成功
-		var checkinCount int
+		// 朝圣新星 - 累计在2个不同的教堂打卡成功
+		var churchCount int
 		database.DB.QueryRow(
-			"SELECT COUNT(DISTINCT draw_date) FROM daily_draws WHERE user_id = $1",
+			"SELECT COUNT(DISTINCT location_id) FROM location_checkins WHERE user_id = $1",
 			userID,
-		).Scan(&checkinCount)
-		return checkinCount >= 3
+		).Scan(&churchCount)
+		return churchCount >= 2
 	case "complete_series":
 		// 检查是否集齐一个系列
 		var rarities []string

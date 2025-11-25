@@ -227,12 +227,8 @@ mark:
 2. 做设备层面的唯一性 -- 避免重复注册
 
 
-增加测试地点：
+增加/删除测试地点：
 docker exec -i h5project_db psql -U h5user -d h5project < scripts/manage_test_location.sql
-删除：
-docker exec -i h5project_db psql -U h5user -d h5project < scripts/manage_test_location.sql
-
-1125更新执行：./scripts/setup_locations.sh
 
 月活查询：
 ./scripts/view_mau.sh

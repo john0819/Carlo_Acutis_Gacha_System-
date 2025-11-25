@@ -146,7 +146,7 @@ ON CONFLICT (key) DO UPDATE SET
 -- 插入默认成就类型
 INSERT INTO achievement_types (code, name, description, reward_points) VALUES
     ('first_card', '一点星星之光', '获得任意第一张卡牌 (实体或数字)', 1),
-    ('pilgrim_nova', '朝圣新星', '累计在 3 个不同的教堂打卡成功', 1),
+    ('pilgrim_nova', '朝圣新星', '累计在 2 个不同的教堂打卡成功', 1),
     ('milestone_7', '收集天上的宝藏', '每 7 张不同卡片就会点亮一次', 1),
     ('complete_all', '圣卡洛的圣体奇迹集', '集齐所有打卡图片', 3),
     ('location_a_15', '稣稣的小羊', '在打卡点A累计打卡15次', 1),

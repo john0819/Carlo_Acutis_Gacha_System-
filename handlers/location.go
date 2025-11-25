@@ -30,15 +30,16 @@ func GetLocationSetting(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetCheckinLocations 获取所有打卡地点
+// GetCheckinLocations 获取所有打卡地点（只返回有成就的地点，隐藏测试位置）
 func GetCheckinLocations(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		sendError(w, "方法不允许", http.StatusMethodNotAllowed)
 		return
 	}
 
+	// 只返回有achievement_code的地点（过滤掉测试位置）
 	rows, err := database.DB.Query(
-		"SELECT id, name, latitude, longitude, radius_meters, achievement_code FROM checkin_locations ORDER BY id",
+		"SELECT id, name, latitude, longitude, radius_meters, achievement_code FROM checkin_locations WHERE achievement_code IS NOT NULL ORDER BY id",
 	)
 	if err != nil {
 		sendError(w, "查询失败", http.StatusInternalServerError)

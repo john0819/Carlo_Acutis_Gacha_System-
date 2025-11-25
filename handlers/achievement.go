@@ -389,16 +389,18 @@ func GetAchievements(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// 如果是地点成就，动态更新描述为实际地点名称
+		// 如果是地点成就，动态更新描述为实际地点名称，并检查地点是否存在
 		if achType.Code == "location_a_15" || achType.Code == "location_b_15" || achType.Code == "location_c_15" {
 			var locationName string
 			err := database.DB.QueryRow(
 				"SELECT name FROM checkin_locations WHERE achievement_code = $1 LIMIT 1",
 				achType.Code,
 			).Scan(&locationName)
-			if err == nil && locationName != "" {
-				achType.Description = "在" + locationName + "累计打卡15次"
+			// 如果地点不存在，跳过这个成就（隐藏测试地点对应的成就）
+			if err != nil || locationName == "" {
+				continue
 			}
+			achType.Description = "在" + locationName + "累计打卡15次"
 		}
 
 		// 获取用户该成就的状态

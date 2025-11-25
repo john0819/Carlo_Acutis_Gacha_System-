@@ -221,3 +221,20 @@ sudo journalctl -u h5project -n 50 --no-pager
 
 # 实时查看日志
 sudo journalctl -u h5project -f
+
+mark:
+1. 考虑下如何做后期检查人流量 -- 除了用户数量
+2. 做设备层面的唯一性 -- 避免重复注册
+
+
+增加测试地点：
+docker exec -i h5project_db psql -U h5user -d h5project < scripts/manage_test_location.sql
+删除：
+docker exec -i h5project_db psql -U h5user -d h5project < scripts/manage_test_location.sql
+
+1125更新执行：./scripts/setup_locations.sh
+
+月活查询：
+./scripts/view_mau.sh
+
+docker exec -i h5project_db psql -U h5user -d h5project < scripts/monthly_active_users.sql

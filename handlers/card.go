@@ -155,9 +155,9 @@ func DrawCard(w http.ResponseWriter, r *http.Request) {
 		).Scan(&validLocationID, &locationName, &distance)
 
 		if err != nil {
-			// 获取所有地点名称
+			// 获取所有有成就的地点名称（不显示测试位置）
 			var locationNames []string
-			rows, _ := database.DB.Query("SELECT name FROM checkin_locations ORDER BY id")
+			rows, _ := database.DB.Query("SELECT name FROM checkin_locations WHERE achievement_code IS NOT NULL ORDER BY id")
 			if rows != nil {
 				defer rows.Close()
 				for rows.Next() {

@@ -230,6 +230,8 @@ mark:
 增加/删除测试地点：
 docker exec -i h5project_db psql -U h5user -d h5project < scripts/manage_test_location.sql
 
+./scripts/update_pilgrim_nova_achievement.sql
+
 月活查询：
 ./scripts/view_mau.sh
 

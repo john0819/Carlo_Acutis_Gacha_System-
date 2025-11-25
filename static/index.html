@@ -817,6 +817,32 @@
         </div>
             </div>
 
+    <!-- 定位权限提示弹窗 -->
+    <div class="modal" id="locationPermissionModal">
+        <div class="modal-content">
+            <button class="close-modal-btn" onclick="closeLocationPermissionModal()">×</button>
+            <h3>📍 需要位置权限</h3>
+            <div style="margin-top: 20px; line-height: 1.8; color: #555; font-size: 15px; text-align: left;">
+                <p style="margin-bottom: 15px;">
+                    <strong>为了确保您在指定地点进行打卡，我们需要获取您的位置信息。</strong>
+                </p>
+                <p style="margin-bottom: 10px;">
+                    📍 <strong>打卡地点：</strong>
+                </p>
+                <ul id="locationList" style="margin-left: 20px; margin-bottom: 15px; color: #666;">
+                    <li>加载中...</li>
+                </ul>
+                <p style="margin-bottom: 15px; color: #888; font-size: 14px;">
+                    💡 提示：请在浏览器弹出的权限请求中选择"允许"，这样才能正常进行打卡抽卡。
+                </p>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="action-btn btn-secondary" onclick="closeLocationPermissionModal()" style="flex: 1;">取消</button>
+                    <button class="action-btn btn-draw" onclick="requestLocationPermission()" style="flex: 1;">允许定位</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 介绍弹窗 -->
     <div class="modal" id="introModal">
         <div class="modal-content">
@@ -981,6 +1007,7 @@
         // ==================== 抽卡逻辑 ====================
         let currentLocation = null;
         let locationCheckEnabled = false;
+        let locationPermissionPending = false; // 标记是否正在等待用户确认定位权限
 
         // 检查位置校验是否启用
         async function checkLocationSetting() {
@@ -1109,42 +1136,105 @@
             });
         }
 
-        async function drawCard() {
+        // 加载打卡地点列表
+        async function loadLocationList() {
+            try {
+                const response = await fetch('/api/checkin-locations', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const locationList = document.getElementById('locationList');
+                    if (locationList && data.locations && data.locations.length > 0) {
+                        locationList.innerHTML = data.locations.map(loc => 
+                            `<li>${loc.name}</li>`
+                        ).join('');
+                    } else {
+                        locationList.innerHTML = '<li>暂无打卡地点</li>';
+                    }
+                } else {
+                    console.error('加载打卡地点失败:', response.status, response.statusText);
+                    const locationList = document.getElementById('locationList');
+                    if (locationList) {
+                        locationList.innerHTML = '<li>加载失败，请重试</li>';
+                    }
+                }
+            } catch (e) {
+                console.error('加载打卡地点失败:', e);
+                const locationList = document.getElementById('locationList');
+                if (locationList) {
+                    locationList.innerHTML = '<li>加载失败，请重试</li>';
+                }
+            }
+        }
+
+        // 显示定位权限提示弹窗
+        async function showLocationPermissionModal() {
+            // 先加载打卡地点列表
+            await loadLocationList();
+            const modal = document.getElementById('locationPermissionModal');
+            if (modal) {
+                modal.classList.add('show');
+            }
+        }
+
+        // 关闭定位权限提示弹窗
+        function closeLocationPermissionModal() {
+            const modal = document.getElementById('locationPermissionModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+            locationPermissionPending = false;
+        }
+
+        // 请求定位权限（用户点击"允许定位"按钮后）
+        async function requestLocationPermission() {
+            closeLocationPermissionModal();
+            locationPermissionPending = true;
+            
+            const btn = document.getElementById('drawBtn');
+            btn.disabled = true;
+            btn.textContent = "获取位置中...";
+
+            try {
+                console.log('📍 用户已确认，正在获取位置...');
+                currentLocation = await getCurrentLocation();
+                console.log('📍 获取到位置:', currentLocation);
+                
+                // 位置获取成功，继续抽卡流程
+                await proceedWithDrawCard();
+            } catch (locationError) {
+                console.error('📍 获取位置失败:', locationError);
+                let errorMsg = '无法获取位置信息';
+                if (locationError.message === 'PERMISSION_DENIED') {
+                    errorMsg = '位置权限被拒绝，请在浏览器设置中允许位置访问后重试';
+                } else if (locationError.message.includes('GPS')) {
+                    errorMsg = locationError.message;
+                } else if (locationError.message.includes('超时')) {
+                    errorMsg = locationError.message;
+                } else {
+                    errorMsg = '无法获取位置，请检查：\n1. 是否允许了位置权限\n2. GPS是否已开启\n3. 网络连接是否正常';
+                }
+                showToast(errorMsg, 'error');
+                btn.disabled = false;
+                btn.textContent = "开始抽卡";
+                locationPermissionPending = false;
+            }
+        }
+
+        // 继续抽卡流程（位置已获取或不需要位置）
+        async function proceedWithDrawCard() {
             const btn = document.getElementById('drawBtn');
             btn.disabled = true;
             btn.textContent = "祈祷中...";
 
             try {
-                // 如果启用了位置校验，先获取位置
                 let requestBody = {};
-                if (locationCheckEnabled) {
-                    console.log('📍 位置校验已启用，正在获取位置...');
-                    try {
-                        currentLocation = await getCurrentLocation();
-                        console.log('📍 获取到位置:', currentLocation);
-                        requestBody = {
-                            latitude: currentLocation.latitude,
-                            longitude: currentLocation.longitude
-                        };
-                    } catch (locationError) {
-                        console.error('📍 获取位置失败:', locationError);
-                        let errorMsg = '无法获取位置信息';
-                        if (locationError.message === 'PERMISSION_DENIED') {
-                            errorMsg = '需要位置权限才能打卡，请在浏览器设置中允许位置访问';
-                        } else if (locationError.message.includes('GPS')) {
-                            errorMsg = locationError.message;
-                        } else if (locationError.message.includes('超时')) {
-                            errorMsg = locationError.message;
-                        } else {
-                            errorMsg = '无法获取位置，请检查：\n1. 是否允许了位置权限\n2. GPS是否已开启\n3. 网络连接是否正常';
-                        }
-                        showToast(errorMsg, 'error');
-                        btn.disabled = false;
-                        btn.textContent = "开始抽卡";
-                        return;
-                    }
-                } else {
-                    console.log('📍 位置校验未启用，跳过位置检查');
+                if (locationCheckEnabled && currentLocation) {
+                    requestBody = {
+                        latitude: currentLocation.latitude,
+                        longitude: currentLocation.longitude
+                    };
                 }
 
                 const response = await fetch('/api/draw', {
@@ -1165,10 +1255,81 @@
                     btn.disabled = false;
                     btn.textContent = "开始抽卡";
                 }
-            } catch (e) {
-                showToast('网络错误', 'error');
+            } catch (error) {
+                console.error('抽卡失败:', error);
+                showToast('网络错误，请重试', 'error');
                 btn.disabled = false;
                 btn.textContent = "开始抽卡";
+            } finally {
+                locationPermissionPending = false;
+            }
+        }
+
+        async function drawCard() {
+            const btn = document.getElementById('drawBtn');
+            
+            // 如果正在等待权限确认，直接返回
+            if (locationPermissionPending) {
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = "祈祷中...";
+
+            try {
+                // 如果启用了位置校验，先检查权限并获取位置
+                let requestBody = {};
+                if (locationCheckEnabled) {
+                    console.log('📍 位置校验已启用，检查定位权限...');
+                    
+                    // 先检查权限状态
+                    const permissionState = await checkLocationPermission();
+                    
+                    // 如果权限状态是 prompt（未询问过）或 denied（已拒绝），先显示提示弹窗
+                    if (permissionState === 'prompt' || permissionState === 'denied') {
+                        btn.disabled = false;
+                        btn.textContent = "开始抽卡";
+                        showLocationPermissionModal();
+                        return; // 等待用户点击"允许定位"按钮
+                    }
+                    
+                    // 权限已授予，直接获取位置
+                    try {
+                        currentLocation = await getCurrentLocation();
+                        console.log('📍 获取到位置:', currentLocation);
+                        requestBody = {
+                            latitude: currentLocation.latitude,
+                            longitude: currentLocation.longitude
+                        };
+                    } catch (locationError) {
+                        console.error('📍 获取位置失败:', locationError);
+                        let errorMsg = '无法获取位置信息';
+                        if (locationError.message === 'PERMISSION_DENIED') {
+                            errorMsg = '位置权限被拒绝，请在浏览器设置中允许位置访问后重试';
+                        } else if (locationError.message.includes('GPS')) {
+                            errorMsg = locationError.message;
+                        } else if (locationError.message.includes('超时')) {
+                            errorMsg = locationError.message;
+                        } else {
+                            errorMsg = '无法获取位置，请检查：\n1. 是否允许了位置权限\n2. GPS是否已开启\n3. 网络连接是否正常';
+                        }
+                        showToast(errorMsg, 'error');
+                        btn.disabled = false;
+                        btn.textContent = "开始抽卡";
+                        return;
+                    }
+                } else {
+                    console.log('📍 位置校验未启用，跳过位置检查');
+                }
+
+                // 继续抽卡流程
+                await proceedWithDrawCard();
+            } catch (error) {
+                console.error('抽卡失败:', error);
+                showToast('网络错误，请重试', 'error');
+                btn.disabled = false;
+                btn.textContent = "开始抽卡";
+                locationPermissionPending = false;
             }
         }
 

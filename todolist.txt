@@ -228,9 +228,8 @@ mark:
 
 
 增加/删除测试地点：
-docker exec -i h5project_db psql -U h5user -d h5project < scripts/manage_test_location.sql
-
-./scripts/update_pilgrim_nova_achievement.sql
+docker exec -i h5project_db psql -U h5user -d h5project -c "DELETE FROM checkin_locations WHERE achievement_code IS NULL;"
+docker exec -i h5project_db psql -U h5user -d h5project -c "INSERT INTO checkin_locations (name, latitude, longitude, radius_meters, achievement_code) VALUES ('测试地点', 22.30000000, 114.18000000, 150, NULL);"
 
 月活查询：
 ./scripts/view_mau.sh

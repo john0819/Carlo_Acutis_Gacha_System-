@@ -1042,7 +1042,8 @@
         }
 
         // 获取用户位置（改进版，支持移动端和微信）
-        function getCurrentLocation() {
+        // skipPermissionCheck: 是否跳过权限检查（用户主动请求时设为true）
+        function getCurrentLocation(skipPermissionCheck = false) {
             return new Promise((resolve, reject) => {
                 if (!navigator.geolocation) {
                     reject(new Error('浏览器不支持地理位置服务'));
@@ -1060,7 +1061,44 @@
                     // 微信内可能仍然可以工作，继续尝试
                 }
 
-                // 先检查权限状态
+                // 如果用户主动请求定位，跳过权限检查，直接尝试获取位置
+                if (skipPermissionCheck) {
+                    console.log('📍 用户主动请求定位，跳过权限检查，直接获取位置...');
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            resolve({
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude,
+                                accuracy: position.coords.accuracy
+                            });
+                        },
+                        (error) => {
+                            let errorMessage = '无法获取位置信息';
+                            switch(error.code) {
+                                case error.PERMISSION_DENIED:
+                                    errorMessage = 'PERMISSION_DENIED';
+                                    break;
+                                case error.POSITION_UNAVAILABLE:
+                                    errorMessage = '位置信息不可用，请检查GPS是否开启';
+                                    break;
+                                case error.TIMEOUT:
+                                    errorMessage = '获取位置超时，请重试';
+                                    break;
+                                default:
+                                    errorMessage = '获取位置失败，请检查定位权限';
+                            }
+                            reject(new Error(errorMessage));
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 15000,
+                            maximumAge: 60000
+                        }
+                    );
+                    return;
+                }
+
+                // 先检查权限状态（非主动请求时）
                 checkLocationPermission().then(permissionState => {
                     if (permissionState === 'denied') {
                         reject(new Error('PERMISSION_DENIED'));
@@ -1095,8 +1133,8 @@
                         },
                         {
                             enableHighAccuracy: true,
-                            timeout: 15000, // 增加超时时间到15秒
-                            maximumAge: 60000 // 允许使用1分钟内的缓存位置
+                            timeout: 15000,
+                            maximumAge: 60000
                         }
                     );
                 }).catch(() => {
@@ -1197,8 +1235,9 @@
             btn.textContent = "获取位置中...";
 
             try {
-                console.log('📍 用户已确认，正在获取位置...');
-                currentLocation = await getCurrentLocation();
+                console.log('📍 用户已确认，正在获取位置（跳过权限检查）...');
+                // 用户主动请求时，跳过权限检查，直接尝试获取位置（会触发浏览器权限弹窗）
+                currentLocation = await getCurrentLocation(true);
                 console.log('📍 获取到位置:', currentLocation);
                 
                 // 位置获取成功，继续抽卡流程
